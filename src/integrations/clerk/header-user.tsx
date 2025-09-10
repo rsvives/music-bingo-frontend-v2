@@ -4,6 +4,7 @@ import {
   SignedOut,
   UserButton,
 } from '@clerk/clerk-react'
+import { Button } from '@/components/ui/Button'
 
 export default function HeaderUser() {
   return (
@@ -13,11 +14,13 @@ export default function HeaderUser() {
       </SignedIn>
       <SignedOut>
         <SignInButton>
-          <div className='py-2 px-4 rounded-md bg-blue-500 text-white hover:bg-blue-700 hover:cursor-pointer'>
+          <Button color='secondary' fill='solid'>
+
             Sign In
-          </div>
+          </Button>
+
         </SignInButton>
-      </SignedOut>
+      </SignedOut >
     </>
   )
 }
