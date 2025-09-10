@@ -1,4 +1,5 @@
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
+import { Aside } from '@/components/Aside'
 
 export const Route = createFileRoute('/_auth')({
     beforeLoad: ({ context, location }) => {
@@ -11,5 +12,15 @@ export const Route = createFileRoute('/_auth')({
             })
         }
     },
-    component: () => <Outlet />,
+    component: () => <AuthRoute />,
 })
+
+const AuthRoute = () => {
+    return (
+        <div className='flex min-h-[80vh] flex-col sm:flex-row'>
+            <Aside />
+            <Outlet />
+        </div>
+
+    )
+}
