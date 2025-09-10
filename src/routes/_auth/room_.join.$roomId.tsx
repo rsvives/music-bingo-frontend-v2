@@ -1,9 +1,12 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useEffect } from 'react'
+import { LoaderCircle } from 'lucide-react'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useGameStore } from '@/store/useGameStore'
-import { API_URL } from '@/utils/config'
-import { BingoCardBoard } from '@/components/BingoCardboard'
+import { API_URL } from '@/lib/config'
+
+import { BingoSection } from '@/components/BingoSection'
+import { JoinLeaveButton } from '@/components/JoinLeaveButton'
 
 
 
@@ -30,6 +33,7 @@ export const Route = createFileRoute('/_auth/room_/join/$roomId')({
         console.log('check', data)
         const gameStore = useGameStore.getState()
         gameStore.setPlayers(data.players)
+        gameStore.setAdmin(data.admin)
         gameStore.setRoomData({ roomId: data.roomId, code: data.code })
         return data
     },
@@ -42,35 +46,8 @@ export const Route = createFileRoute('/_auth/room_/join/$roomId')({
 
 function LobbyRoom() {
 
-    const { code } = Route.useSearch()
-    const { roomId } = Route.useParams()
     const { socket, authUser } = useAuthStore()
-    const { players, addPlayer, gameStatus, setGameStatus, setJoined, isJoined, myNumbers, setMyNumbers, setLastNumber, addToMarkedNumbers, lastNumber } = useGameStore()
-
-    const roomDetails = Route.useLoaderData()
-    console.log(roomDetails)
-
-
-    const handleJoin = () => {
-        console.log('joining')
-        if (socket && !isJoined && gameStatus === 'waiting') {
-            socket.emit('room:join', { room: roomId, code, user: authUser })
-        }
-    }
-
-    const joinedToRoom = () => {
-        console.log('joinedtoroom')
-        if (socket) {
-            socket.on('room:joined', (data) => {
-                const { lastPlayerJoined } = data
-                addPlayer(lastPlayerJoined)
-                setJoined(true)
-            })
-
-        }
-    }
-
-    useEffect(joinedToRoom, [socket])
+    const { roomId, code, gameStatus, isJoined, setGameStatus, setMyNumbers, setLastNumber } = useGameStore()
 
     const handleGameStarted = () => {
         socket?.on('game:started', (data) => {
@@ -89,38 +66,28 @@ function LobbyRoom() {
             console.log(data)
             const { randomNumber } = data
             setLastNumber(randomNumber)
-            addToMarkedNumbers(randomNumber)
+            // addToMarkedNumbers(randomNumber)
 
         })
     }
     useEffect(handleNumberGenerated, [socket])
 
-    return <div>
-        {!isJoined && gameStatus === 'waiting' &&
-            <div>
-                <h1>Room: <code>{roomId}</code></h1>
-                <p>code: <code>{code}</code> </p>
-                <button onClick={handleJoin}>Join!</button>
-            </div>
+    const handleJoin = () => {
+        console.log('joining')
+        if (socket && !isJoined && gameStatus === 'waiting') {
+            socket.emit('room:join', { room: roomId, code, user: authUser })
         }
+        if (socket && isJoined && gameStatus === 'started') {
+            socket.emit('room:leave', { room: roomId, code, user: authUser })
+        }
+    }
 
-        <div>
-            <h2>Players:</h2>
-            <ul>
-                {Object.entries(players).map(([k, p]) => (
-                    <li key={k}>{p.firstName}
-                        {p.isAdmin && <span>✅</span>}
-                    </li>
-                ))}
-            </ul>
-        </div>
-        <div>
-            {gameStatus === 'waiting' && <h2>Waiting to start</h2>}
-        </div>
-        <h2 style={{ fontSize: 24 }}>{lastNumber}</h2>
-        <div>
-            <h2>My bingo card:</h2>
-            <BingoCardBoard bingoNumbers={myNumbers} />
-        </div>
-    </div >
+    return (
+        <div className='flex flex-1 items-center justify-center'>
+            {!isJoined && <JoinLeaveButton isJoined={isJoined} handleJoin={handleJoin} />}
+            {gameStatus === 'waiting' && isJoined && <h2 className='animate-pulse flex gap-2'><LoaderCircle className='animate-spin' /> Waiting to start</h2>}
+
+            <BingoSection />
+        </div >
+    )
 }

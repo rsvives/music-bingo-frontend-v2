@@ -1,11 +1,11 @@
-import { Copy } from 'lucide-react'
+import { ArrowRightCircle, Copy } from 'lucide-react'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import QRCode from 'react-qr-code'
 import { useGameStore } from '@/store/useGameStore'
 import { useAuthStore } from '@/store/useAuthStore'
-import { API_URL, FRONTEND_URL } from '@/utils/config'
-import { BingoCardBoard } from '@/components/BingoCardboard'
+import { API_URL, FRONTEND_URL } from '@/lib/config'
+import { BingoSection } from '@/components/BingoSection'
 
 
 type RoomParams = {
@@ -14,10 +14,10 @@ type RoomParams = {
 
 export const Route = createFileRoute('/_auth/room_/$roomId')({
     component: SpecificRoom,
+    beforeLoad: () => { },
     loaderDeps: ({ search: { code } }: { search: RoomParams }) => ({ code }),
     loader: async ({ params, deps }) => {
         const { code } = deps
-        console.log('hello', deps)
         const res = await fetch(`${API_URL}/api/room/check`, {
             method: 'POST',
             headers: {
@@ -29,7 +29,7 @@ export const Route = createFileRoute('/_auth/room_/$roomId')({
         const data = await res.json()
         console.log('check', data)
         const gameStore = useGameStore.getState()
-        gameStore.setPlayers(data.players)
+        // gameStore.setPlayers(data.players)
         gameStore.setRoomData({ roomId: data.roomId, code: data.code })
         return data
     },
@@ -44,22 +44,10 @@ function SpecificRoom() {
 
     const { roomId: roomIdParams } = Route.useParams()
     const { socket } = useAuthStore()
-    const { players, code, roomId, addPlayer, gameStatus, setGameStatus, myNumbers, setMyNumbers, markedNumbers, setLastNumber, addToMarkedNumbers, lastNumber } = useGameStore()
+    const { code, roomId, gameStatus, setGameStatus, setMyNumbers } = useGameStore()
     const joinLink = `${FRONTEND_URL}/room/join/${roomId}?code=${code}`
 
-    const newPlayerJoined = () => {
-        socket?.on('room:joined', (data) => {
-            console.log('joined', data)
-            const { lastPlayerJoined } = data
-            addPlayer(lastPlayerJoined)
-        })
 
-    }
-    const copyJoinLink = () => {
-        navigator.clipboard.writeText(joinLink)
-        alert('Link copied')
-    }
-    useEffect(newPlayerJoined, [socket])
 
 
 
@@ -81,57 +69,44 @@ function SpecificRoom() {
     useEffect(handleGameStarted, [socket])
 
 
-    const handleNextNumber = () => {
-        console.log('next number')
-        socket?.emit('game:next-number', ({ markedNumbers: [...markedNumbers], roomId }))
+
+
+
+    const copyJoinLink = () => {
+        navigator.clipboard.writeText(joinLink)
+        alert('Link copied')
     }
-    const handleNumberGenerated = () => {
-        console.log('number generated')
-        socket?.on('game:number-generated', (data) => {
-            console.log(data)
-            const { randomNumber } = data
-            setLastNumber(randomNumber)
-            addToMarkedNumbers(randomNumber)
-
-        })
-    }
-    useEffect(handleNumberGenerated, [socket])
-
-
     if (roomId != roomIdParams) {
         return <p>error: wrong room id</p>
     }
 
     return (
-        <div>
-            {gameStatus === 'waiting' && <div>
 
-                <h1>Room: <code>{roomId}</code></h1>
-                <p>code: <code>{code}</code> </p>
-                <button onClick={startGame}>start!</button>
-                <div>
-                    <p>Join link:</p>
-                    <p>{joinLink} <button onClick={copyJoinLink}><Copy /></button> </p>
-                    <QRCode value={joinLink} />
-                </div>
-            </div>}
+        <main className='flex flex-1 justify-center items-center' >
 
-            <div>
-                <h2>Players:</h2>
-                <ul>
-                    {Object.entries(players).map(([k, p]) => (
-                        <li key={k}>{p.firstName}
-                            {p.isAdmin && <span>✅</span>}
-                        </li>
-                    ))}
-                </ul>
-            </div>
-            <h2 style={{ fontSize: 24 }}>{lastNumber}</h2>
-            <div>
-                <h2>My bingo card:</h2>
-                <button onClick={handleNextNumber}>next number</button>
-                <BingoCardBoard bingoNumbers={myNumbers} />
-            </div>
-        </div >
+            {gameStatus === 'waiting' &&
+                <section id='room-details' className='w-full p-4'>
+                    <div className='flex flex-col items-center gap-4'>
+                        <div className='max-w-[200px] sm:max-w-[300px] mb-1 sm:mb-6 h-auto mx-0 my-auto w-full'>
+                            <QRCode value={joinLink} viewBox={`0 0 256 256`} size={256} className='h-auto max-w-[100%] w-full' />
+                        </div>
+                        <div className='flex flex-col md:flex-row gap-2 items-center justify-center' >
+                            <b className='w-[100px]'>Join link:</b>
+                            <div className='flex gap-2 w-auto items-center border-1 border-slate-200 rounded-lg p-2 hover:bg-slate-100 hover:cursor-pointer' onClick={copyJoinLink}>
+                                <span className='text-sm w-full text-wrap break-all'>{joinLink}</span>
+                                <span className='p-2'>
+                                    <Copy size={12} strokeWidth={2} />
+                                </span>
+                            </div>
+                        </div>
+                        <button className='rounded-lg border-0 border-black bg-flabingo-400 text-white text-xs font-bold uppercase px-3 py-2 hover:bg-flabingo-200 hover:cursor-pointer' onClick={startGame}>start game</button>
+                    </div>
+                </section>
+            }
+
+            <BingoSection />
+        </main >
     )
 }
+
+

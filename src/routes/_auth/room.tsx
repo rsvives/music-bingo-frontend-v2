@@ -9,13 +9,14 @@ import { useGameStore } from '@/store/useGameStore'
 
 export const Route = createFileRoute('/_auth/room')({
   component: Room,
+  beforeLoad: () => console.log('loading room')
 
 })
 
 
 function Room() {
-  const { isSignedIn, isLoaded, user } = useUser()
-  const { socket, checkAuth, authUser } = useAuthStore()
+  const { isSignedIn, isLoaded, } = useUser()
+  const { socket, authUser } = useAuthStore()
   const { createRoom, setAdmin, setRoomData, addPlayer } = useGameStore()
   const navigate = useNavigate()
 
@@ -39,6 +40,7 @@ function Room() {
           const { room, code, lastPlayerJoined: admin } = data
           setAdmin(admin)
           addPlayer(admin)
+          console.log(useGameStore.getState().players)
           setRoomData({ roomId: room, code })
           navigate({ to: '/room/$roomId', params: { roomId: room }, search: { code } })
         }
@@ -60,8 +62,7 @@ function Room() {
 
   return (
     <div className="text-center">
-      <h1>Hi {user.username ?? user.firstName}</h1>
-      <button onClick={handleCreateGame}> Create Game</button>
+
     </div>
   )
 }
