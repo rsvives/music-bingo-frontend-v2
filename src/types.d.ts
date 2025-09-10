@@ -4,6 +4,7 @@ export type User = {
     firstName: string | null,
     lastName?: string | null
     email: string | undefined,
+    pic: string
 }
 type PlayerId = string
 

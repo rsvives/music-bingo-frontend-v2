@@ -3,7 +3,7 @@ import { io } from 'socket.io-client'
 import type { Socket } from 'socket.io-client';
 import type { User } from '@/types'
 import type { UserResource } from '@clerk/types'
-import { API_URL } from '@/utils/config';
+import { API_URL } from '@/lib/config';
 // import { socket } from '@/socket'
 
 
@@ -29,7 +29,8 @@ export const useAuthStore = create<State & Actions>((set, get) => ({
                 username: user.username || user.firstName,
                 firstName: user.firstName,
                 lastName: user.lastName,
-                email: user.primaryEmailAddress?.emailAddress
+                email: user.primaryEmailAddress?.emailAddress,
+                pic: user.imageUrl || '/user-default-avatar.png'
             }
             set({ authUser: mappedUser })
             if (!get().socket?.connected) get().connectSocket()
