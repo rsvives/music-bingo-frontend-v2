@@ -1,5 +1,34 @@
 @import "tailwindcss";
 
+@theme {
+  --color-flabingo-50: #fff1f2;
+  --color-flabingo-100: #ffe3e5;
+  --color-flabingo-200: #ffccd2;
+  --color-flabingo-300: #ffa1ac;
+  --color-flabingo-400: #ff5d73;
+  --color-flabingo-500: #f93a59;
+  --color-flabingo-600: #e71743;
+  --color-flabingo-700: #c30d37;
+  --color-flabingo-800: #a30e36;
+  --color-flabingo-900: #8b1035;
+  --color-flabingo-950: #4e0317;
+
+  --animate-reduction: reduction 7500ms ease-in-out infinite;
+
+
+  @keyframes reduction {
+
+    0% {
+      width: 100%;
+    }
+
+    100% {
+      width: 0%;
+    }
+  }
+
+}
+
 body {
   @apply m-0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
