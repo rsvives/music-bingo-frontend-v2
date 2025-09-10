@@ -8,20 +8,22 @@ type State = {
     roomId: string,
     code: string,
     isJoined: boolean,
-    markedNumbers: Set<number>,
-    players: PlayersMap,
+    calledNumbers: Set<number>,
+    myMarkedNumbers: Set<number>,
+    players: PlayersMap | null,
     lineWinner: Player | null,
     bingoWinner: Player | null,
     admin: User | null,
     gameStatus: 'waiting' | 'started' | 'ended'
     myNumbers: Array<Array<number>>,
     lastNumber: number | null
+    confetti: boolean
 }
 type Actions = {
 
     startGame: (admin: User) => void,
     createRoom: (user: User) => void,
-    addPlayer: (newPlayer: Record<PlayerId, Player>) => void,
+    addPlayer: (newPlayer: Player) => void,
     removePlayer: (playerToRemove: PlayerId) => void,
     setLineWinner: (player: Player) => void,
     setBingoWinner: (player: Player) => void,
@@ -30,24 +32,28 @@ type Actions = {
     setPlayers: (players: PlayersMap) => void
     checkJoined: (player: Player) => void,
     setJoined: (joined: boolean) => void,
-    setGameStatus: (status: State['gameStatus']) => void
-    setMyNumbers: (bingoNumbers: [Array<number>, Array<number>, Array<number>]) => void
-    setMarkedNumbers: (markedNumbers: Array<number>) => void
-    setLastNumber: (number: number) => void
-    addToMarkedNumbers: (number: number) => void
+    setGameStatus: (status: State['gameStatus']) => void,
+    setMyNumbers: (bingoNumbers: [Array<number>, Array<number>, Array<number>]) => void,
+    setMarkedNumbers: (markedNumbers: Array<number>) => void,
+    setLastNumber: (number: number) => void,
+    addToMyMarkedNumbers: (number: number) => void,
+    addToCalledNumbers: (number: number) => void,
+    setConfetti: (bool: boolean) => void,
 }
 export const useGameStore = create<State & Actions>((set, get) => ({
     roomId: '',
     code: '',
     isJoined: false,
     admin: null,
-    markedNumbers: new Set(),
+    calledNumbers: new Set(),
+    myMarkedNumbers: new Set(),
     myNumbers: [[]],
     lineWinner: null,
     bingoWinner: null,
-    players: {},
+    players: null,
     gameStatus: 'waiting',
     lastNumber: null,
+    confetti: false,
 
     startGame: (admin) => {
         // get().setAdmin(admin)
@@ -70,7 +76,7 @@ export const useGameStore = create<State & Actions>((set, get) => ({
         set((state) => ({
             players: {
                 ...state.players,
-                ...newPlayer
+                [newPlayer.id]: { ...newPlayer }
             }
         })),
     setPlayers: (players) => set({ players }),
@@ -89,7 +95,10 @@ export const useGameStore = create<State & Actions>((set, get) => ({
         // const myNumbersSet = bingoNumbers.map(row => new Set(row))
         set({ myNumbers: bingoNumbers })
     },
-    setMarkedNumbers: (markedNumbers) => { set({ markedNumbers: new Set(markedNumbers) }) },
+
+    setMarkedNumbers: (markedNumbers) => { set({ myMarkedNumbers: new Set(markedNumbers) }) },
+    addToMyMarkedNumbers: (number) => { set({ myMarkedNumbers: get().myMarkedNumbers.add(number) }) },
+    addToCalledNumbers: (number) => { set({ calledNumbers: get().calledNumbers.add(number) }) },
     setLastNumber: (number) => { set({ lastNumber: number }) },
-    addToMarkedNumbers: (number) => { set({ markedNumbers: get().markedNumbers.add(number) }) }
+    setConfetti: (bool) => { set({ confetti: bool }) }
 }))
