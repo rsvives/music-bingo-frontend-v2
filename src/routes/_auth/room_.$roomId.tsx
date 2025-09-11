@@ -1,9 +1,10 @@
-import { ArrowRightCircle, Copy } from 'lucide-react'
+import { Copy } from 'lucide-react'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import QRCode from 'react-qr-code'
 import superjson from 'superjson'
 import toast from 'react-hot-toast'
+import type { Player, PlayerId } from '@/types'
 import { useGameStore } from '@/store/useGameStore'
 import { useAuthStore } from '@/store/useAuthStore'
 import { API_URL, FRONTEND_URL } from '@/lib/config'
@@ -28,13 +29,15 @@ export const Route = createFileRoute('/_auth/room_/$roomId')({
         })
         if (res.status == 404) throw redirect({ to: '/' })
         const { json, meta } = await res.json()
-        const { roomId, players } = superjson.deserialize({ json, meta })
+        const { roomId }: { roomId: string } = superjson.deserialize({ json, meta })
         console.log('check')
         const gameStore = useGameStore.getState()
         // gameStore.setPlayers(data.players)
-        gameStore.setRoomData({ roomId, code })
-        // gameStore.setAdmin()
-        return { roomId, code }
+        if (roomId && code) {
+            gameStore.setRoomData({ roomId, code })
+            // gameStore.setAdmin()
+            return { roomId, code }
+        }
     },
     validateSearch: (search): RoomParams => {
         return {
@@ -62,11 +65,16 @@ function SpecificRoom() {
 
     const handleGameStarted = () => {
         socket?.on('game:started', ({ json, meta }) => {
-            const { players: playersWithNumbers } = superjson.deserialize({ json, meta })
+            const { players: playersWithNumbers }: { players: Map<PlayerId, Player> } = superjson.deserialize({ json, meta })
             console.log(playersWithNumbers)
             setGameStatus('started')
-            const numbers = playersWithNumbers.get(useAuthStore.getState().authUser!.id).numbers
-            setMyNumbers(numbers)
+
+            const myself = playersWithNumbers.get(useAuthStore.getState().authUser!.id)
+            if (myself) {
+                setMyNumbers(myself.numbers)
+            }
+
+
         })
     }
     useEffect(handleGameStarted, [socket])

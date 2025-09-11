@@ -10,7 +10,13 @@ export const Route = createFileRoute('/')({
 })
 
 function RouteComponent() {
-    useEffect(() => { setConfetti(true) }, [])
+
+    const { reset: resetGameStore } = useGameStore()
+    useEffect(() => {
+        setConfetti(true)
+        localStorage.removeItem('flabingo-game-storage')
+        resetGameStore()
+    }, [])
     const { confetti, setConfetti } = useGameStore()
     return (<>
         <main className='flex flex-1 min-h-[85vh] flex-col gap-4 items-center justify-center pb-8'>
@@ -28,7 +34,7 @@ function RouteComponent() {
                     <Button fill='solid' color='primary'>Regular Bingo ✨</Button>
                 </Link>
 
-                <Button fill='outline' color='secondary' onClick={() => toast('Work In Progress: Will be available soon', { icon: '⏳' })}>Music Bingo 🎵</Button>
+                <Button fill='outline' color='secondary' onClick={() => toast('Will be available soon!', { icon: '⏳' })}>Music Bingo 🎵</Button>
 
 
             </div>

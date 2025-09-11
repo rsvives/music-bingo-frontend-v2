@@ -2,12 +2,13 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { LoaderCircle } from 'lucide-react'
 import superjson from 'superjson'
+import type { Player, PlayerId, User } from '@/types'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useGameStore } from '@/store/useGameStore'
 import { API_URL } from '@/lib/config'
 
 import { BingoSection } from '@/components/BingoSection'
-import { JoinLeaveButton } from '@/components/JoinLeaveButton'
+
 
 
 type RoomParams = {
@@ -32,7 +33,7 @@ export const Route = createFileRoute('/_auth/room_/join/$roomId')({
         if (res.status == 301) throw redirect({ to: '/', search: { error: 'forbidden' } })
 
         const { json, meta } = await res.json()
-        const data = superjson.deserialize({ json, meta })
+        const data: { admin: Player, players: Map<PlayerId, Player>, roomId: string, code: string } = superjson.deserialize({ json, meta })
         console.log('check', data)
         const gameStore = useGameStore.getState()
         gameStore.setPlayers(data.players)
@@ -49,38 +50,27 @@ export const Route = createFileRoute('/_auth/room_/join/$roomId')({
 
 function LobbyRoom() {
 
-    const { socket, authUser } = useAuthStore()
-    const { roomId, code, gameStatus, isJoined, setGameStatus, setMyNumbers, setLastNumber } = useGameStore()
+    const { socket } = useAuthStore()
+    const { gameStatus, isJoined, setGameStatus, setMyNumbers, } = useGameStore()
 
     const handleGameStarted = () => {
         socket?.on('game:started', ({ json, meta }) => {
-            const { players: playersWithNumbers } = superjson.deserialize({ json, meta })
+            const { players: playersWithNumbers }: { players: Map<PlayerId, Player> } = superjson.deserialize({ json, meta })
+            console.log(playersWithNumbers)
             setGameStatus('started')
-            const numbers = playersWithNumbers.get(useAuthStore.getState().authUser!.id).numbers
-            setMyNumbers(numbers)
+
+            const myself = playersWithNumbers.get(useAuthStore.getState().authUser!.id)
+            if (myself) {
+                setMyNumbers(myself.numbers)
+            }
         })
     }
     useEffect(handleGameStarted, [socket])
 
-    const handleNumberGenerated = () => {
-        console.log('number generated')
-        socket?.on('game:number-generated', (data) => {
-            console.log(data)
-            const { randomNumber } = data
-            setLastNumber(randomNumber)
-            // addToMarkedNumbers(randomNumber)
-
-        })
-    }
-    useEffect(handleNumberGenerated, [socket])
-
-
 
     return (
         <div className='flex flex-1 items-center justify-center'>
-
             {gameStatus === 'waiting' && isJoined && <h2 className='animate-pulse flex gap-2'><LoaderCircle className='animate-spin' /> Waiting to start</h2>}
-
             <BingoSection />
         </div >
     )
