@@ -1,13 +1,13 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { LoaderCircle } from 'lucide-react'
+import superjson from 'superjson'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useGameStore } from '@/store/useGameStore'
 import { API_URL } from '@/lib/config'
 
 import { BingoSection } from '@/components/BingoSection'
 import { JoinLeaveButton } from '@/components/JoinLeaveButton'
-
 
 
 type RoomParams = {
@@ -28,8 +28,11 @@ export const Route = createFileRoute('/_auth/room_/join/$roomId')({
             },
             body: JSON.stringify({ roomId: params.roomId, code })
         })
-        if (res.status == 404) throw redirect({ to: '/' })
-        const data = await res.json()
+        if (res.status == 404) throw redirect({ to: '/', search: { error: 'room not found' } })
+        if (res.status == 301) throw redirect({ to: '/', search: { error: 'forbidden' } })
+
+        const { json, meta } = await res.json()
+        const data = superjson.deserialize({ json, meta })
         console.log('check', data)
         const gameStore = useGameStore.getState()
         gameStore.setPlayers(data.players)
@@ -50,11 +53,10 @@ function LobbyRoom() {
     const { roomId, code, gameStatus, isJoined, setGameStatus, setMyNumbers, setLastNumber } = useGameStore()
 
     const handleGameStarted = () => {
-        socket?.on('game:started', (data) => {
-            console.log('game started', data)
+        socket?.on('game:started', ({ json, meta }) => {
+            const { players: playersWithNumbers } = superjson.deserialize({ json, meta })
             setGameStatus('started')
-            const { players: allPlayers } = data
-            const numbers = allPlayers[useAuthStore.getState().authUser!.id].numbers
+            const numbers = playersWithNumbers.get(useAuthStore.getState().authUser!.id).numbers
             setMyNumbers(numbers)
         })
     }
@@ -72,19 +74,11 @@ function LobbyRoom() {
     }
     useEffect(handleNumberGenerated, [socket])
 
-    const handleJoin = () => {
-        console.log('joining')
-        if (socket && !isJoined && gameStatus === 'waiting') {
-            socket.emit('room:join', { room: roomId, code, user: authUser })
-        }
-        if (socket && isJoined && gameStatus === 'started') {
-            socket.emit('room:leave', { room: roomId, code, user: authUser })
-        }
-    }
+
 
     return (
         <div className='flex flex-1 items-center justify-center'>
-            {!isJoined && <JoinLeaveButton isJoined={isJoined} handleJoin={handleJoin} />}
+
             {gameStatus === 'waiting' && isJoined && <h2 className='animate-pulse flex gap-2'><LoaderCircle className='animate-spin' /> Waiting to start</h2>}
 
             <BingoSection />

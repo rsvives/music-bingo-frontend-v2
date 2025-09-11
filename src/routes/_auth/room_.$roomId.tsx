@@ -2,11 +2,12 @@ import { ArrowRightCircle, Copy } from 'lucide-react'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import QRCode from 'react-qr-code'
+import superjson from 'superjson'
+import toast from 'react-hot-toast'
 import { useGameStore } from '@/store/useGameStore'
 import { useAuthStore } from '@/store/useAuthStore'
 import { API_URL, FRONTEND_URL } from '@/lib/config'
 import { BingoSection } from '@/components/BingoSection'
-
 
 type RoomParams = {
     code?: string
@@ -26,12 +27,14 @@ export const Route = createFileRoute('/_auth/room_/$roomId')({
             body: JSON.stringify({ roomId: params.roomId, code })
         })
         if (res.status == 404) throw redirect({ to: '/' })
-        const data = await res.json()
-        console.log('check', data)
+        const { json, meta } = await res.json()
+        const { roomId, players } = superjson.deserialize({ json, meta })
+        console.log('check')
         const gameStore = useGameStore.getState()
         // gameStore.setPlayers(data.players)
-        gameStore.setRoomData({ roomId: data.roomId, code: data.code })
-        return data
+        gameStore.setRoomData({ roomId, code })
+        // gameStore.setAdmin()
+        return { roomId, code }
     },
     validateSearch: (search): RoomParams => {
         return {
@@ -58,11 +61,11 @@ function SpecificRoom() {
     }
 
     const handleGameStarted = () => {
-        socket?.on('game:started', (data) => {
-            console.log('game started', data)
+        socket?.on('game:started', ({ json, meta }) => {
+            const { players: playersWithNumbers } = superjson.deserialize({ json, meta })
+            console.log(playersWithNumbers)
             setGameStatus('started')
-            const { players: allPlayers } = data
-            const numbers = allPlayers[useAuthStore.getState().authUser!.id].numbers
+            const numbers = playersWithNumbers.get(useAuthStore.getState().authUser!.id).numbers
             setMyNumbers(numbers)
         })
     }
@@ -74,7 +77,9 @@ function SpecificRoom() {
 
     const copyJoinLink = () => {
         navigator.clipboard.writeText(joinLink)
-        alert('Link copied')
+        toast.success('Link copied to clipboard!',
+            // { iconTheme: { primary: '#ff5d73', secondary: '#ffffff' } }
+        )
     }
     if (roomId != roomIdParams) {
         return <p>error: wrong room id</p>
