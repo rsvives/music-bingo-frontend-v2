@@ -1,6 +1,6 @@
 import { useEffect } from "react"
-import { ArrowRightCircle } from "lucide-react"
 import ConfettiExplosion from "react-confetti-explosion"
+import toast from "react-hot-toast"
 import { BingoCard } from "./BingoCard"
 import { useAuthStore } from "@/store/useAuthStore"
 import { useGameStore } from "@/store/useGameStore"
@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 
 export const BingoSection = () => {
     const { socket, authUser } = useAuthStore()
-    const { gameStatus, confetti, setConfetti, lastNumber, calledNumbers, roomId, admin, setLastNumber, addToCalledNumbers, myNumbers } = useGameStore()
+    const { gameStatus, increaseMarked, confetti, players, setLineWinner, setBingoWinner, setConfetti, lastNumber, calledNumbers, roomId, admin, setLastNumber, addToCalledNumbers, myNumbers } = useGameStore()
     const SECONDS_TO_NEXT_NUMBER = 7.5
 
     useEffect(() => {
@@ -25,17 +25,49 @@ export const BingoSection = () => {
         console.log('next number')
         socket?.emit('game:next-number', ({ calledNumbers: [...calledNumbers], roomId }))
     }
-    const handleNumberGenerated = () => {
-        console.log('number generated')
-        socket?.on('game:number-generated', (data) => {
+
+
+    useEffect(() => {
+        const handleNumberGenerated = (data: { randomNumber: number }) => {
+            console.log('number generated')
             console.log(data)
             const { randomNumber } = data
             setLastNumber(randomNumber)
             addToCalledNumbers(randomNumber)
+        }
+        const handleLineWon = (playerID: string) => {
+            const lineWinner = players.get(playerID)
+            setLineWinner(lineWinner!)
+            increaseMarked(playerID)
+            toast(`${lineWinner?.username} won line`, { icon: '🎉' })
+        }
+        const handlePlayerMarked = (playerID: string) => {
+            const playerMarked = players.get(playerID)
+            increaseMarked(playerID)
+            toast.success(`${playerMarked?.username} marked!`)
+        }
 
-        })
-    }
-    useEffect(handleNumberGenerated, [socket])
+        const handleBingoWon = (playerID: string) => {
+            console.log('bingo', playerID)
+            const bingoWinner = players.get(playerID)
+            increaseMarked(playerID)
+            setBingoWinner(bingoWinner!)
+            toast(`BINGO! ${bingoWinner?.username} won! `, { icon: '🎉' })
+
+        }
+
+        socket?.on('game:number-generated', handleNumberGenerated)
+        socket?.on('player:line', handleLineWon)
+        socket?.on('player:bingo', handleBingoWon)
+        socket?.on('player:marked', handlePlayerMarked)
+        return () => {
+            socket?.off('game:number-generated', handleNumberGenerated)
+            socket?.off('player:line', handleLineWon)
+            socket?.off('player:bingo', handleBingoWon)
+            socket?.on('player:marked', handlePlayerMarked)
+
+        }
+    }, [socket])
 
     return (
         <div>
@@ -46,16 +78,9 @@ export const BingoSection = () => {
                 gameStatus === 'started' && <section id='bingo-numbers'>
                     <h2 className='h-12 font-bold text-center text-4xl mb-2'>{lastNumber}</h2>
                     <div>
-                        <div className='flex justify-between items-center mb-4'>
-                            {/* <h2 className='font-bold'>My bingo card:</h2> */}
-                            {/* {authUser?.id === admin?.id &&
-                                <button onClick={handleNextNumber} className='flex gap-2 items-center rounded-lg 0 border-black bg-flabingo-400 text-white text-xs font-bold uppercase px-3 py-2 hover:bg-flabingo-200 hover:cursor-pointer'>next number <ArrowRightCircle strokeWidth={1.5} /></button>} */}
-
-                        </div>
                         <BingoCard bingoNumbers={myNumbers} />
                         <div className="w-full relative z-0 bg-slate-300 h-2 mt-2 rounded-full">
-                            <div className={cn(' relative z-0 bg-slate-800 h-2 mt-2 rounded-full', 'animate-reduction')}>
-                            </div>
+                            <div className={cn(' relative z-0 bg-slate-800 h-2 mt-2 rounded-full', 'animate-reduction')}></div>
                         </div>
 
                     </div>
