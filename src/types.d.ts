@@ -15,4 +15,5 @@ export interface Player extends User {
     marked: 0 // TODO: should be a set with marked numbers
 }
 
-export type PlayersMap = Record<PlayerId, PlayerData>
+// export type PlayersMap = Record<PlayerId, PlayerData>
+export type PlayersMap = Map<PlayerId, PlayerData>
