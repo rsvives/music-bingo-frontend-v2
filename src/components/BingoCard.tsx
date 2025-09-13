@@ -4,10 +4,7 @@ type props = {
     bingoNumbers: Array<Array<number>>
 }
 
-
 export const BingoCard = ({ bingoNumbers }: props) => {
-
-
     return (
         <table cellSpacing={0} cellPadding={0} border={0}>
             <tbody>
