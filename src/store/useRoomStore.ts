@@ -1,7 +1,8 @@
 
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { Player, PlayersMap, User } from '@/types'
+import type { PlayersMap, User } from '@/types'
+import { createSuperjsonStorage } from "@/lib/utils"
 
 type State = {
     roomId: string | null,
@@ -21,6 +22,7 @@ type Actions = {
     resetRoomStore: () => void,
 
 }
+const storage = createSuperjsonStorage<State & Actions>()
 
 export const useRoomStore = create<State & Actions>()(
     persist(
@@ -48,7 +50,7 @@ export const useRoomStore = create<State & Actions>()(
         }),
         {
             name: 'flabingo-room-storage', // name of the item in the storage (must be unique)
-            // storage,
+            storage,
         }
     )
 )
