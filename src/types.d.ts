@@ -11,6 +11,7 @@ type PlayerId = string
 export interface Player extends User {
     isAdmin?: boolean,
     socket: string | null | undefined,
+    score: number,
     numbers: [Array<number>, Array<number>, Array<number>],
     marked: 0 // TODO: should be a set with marked numbers
 }

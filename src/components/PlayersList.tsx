@@ -2,24 +2,27 @@
 import { useEffect } from "react"
 import superjson from 'superjson'
 import { JoinLeaveButton } from "./JoinLeaveButton"
-import type { Player } from "@/types"
+import type { Player, PlayerId } from "@/types"
 import type { SuperJSONValue } from "node_modules/superjson/dist/types"
 import { useAuthStore } from "@/store/useAuthStore"
-import { useGameStore } from "@/store/useGameStore"
+import { usePlayersStore } from "@/store/usePlayersStore"
+import { useRoomStore } from "@/store/useRoomStore"
 
 
 export const PlayerList = () => {
     const { socket, authUser } = useAuthStore()
-    const { players, admin, addPlayer, removePlayer } = useGameStore()
-
+    const { admin, } = useRoomStore()
+    const { players,
+        setPlayers,
+        removePlayer } = usePlayersStore()
 
 
     useEffect(() => {
         const onRoomJoined = ({ json, meta }: SuperJSONValue) => {
-            const data: { lastPlayerJoined: Player } = superjson.deserialize({ json, meta })
+            const data: { players: Map<PlayerId, Player> } = superjson.deserialize({ json, meta })
             console.log('joined', data)
-            const { lastPlayerJoined } = data
-            addPlayer(lastPlayerJoined)
+            const { players: receivedPlayers } = data
+            setPlayers(receivedPlayers)
         }
 
         const onRoomLeaved = (playerId: string) => {
