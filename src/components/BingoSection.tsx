@@ -5,10 +5,23 @@ import { BingoCard } from "./BingoCard"
 import { useAuthStore } from "@/store/useAuthStore"
 import { useGameStore } from "@/store/useGameStore"
 import { cn } from "@/lib/utils"
+import { useNumbersStore } from "@/store/useNumbersStore"
+import { usePlayersStore } from "@/store/usePlayersStore"
+import { useRoomStore } from "@/store/useRoomStore"
 
 export const BingoSection = () => {
     const { socket, authUser } = useAuthStore()
-    const { gameStatus, increaseMarked, confetti, players, setLineWinner, setBingoWinner, setConfetti, lastNumber, calledNumbers, roomId, admin, setLastNumber, addToCalledNumbers, myNumbers } = useGameStore()
+    const { admin } = useRoomStore()
+    const { gameStatus, confetti, setLineWinner, setBingoWinner, setConfetti, } = useGameStore()
+    const { players } = usePlayersStore()
+    const {
+        lastCalledNumber,
+        setLastCalledNumber,
+        calledNumbers,
+        addCalledNumber,
+        myBingoNumbers
+    } = useNumbersStore()
+
     const SECONDS_TO_NEXT_NUMBER = 7.5
 
     useEffect(() => {
@@ -23,7 +36,7 @@ export const BingoSection = () => {
 
     const handleNextNumber = () => {
         console.log('next number')
-        socket?.emit('game:next-number', ({ calledNumbers: [...calledNumbers], roomId }))
+        socket?.emit('game:next-number', ({ calledNumbers: [...calledNumbers] }))
     }
 
 
@@ -32,26 +45,26 @@ export const BingoSection = () => {
             console.log('number generated')
             console.log(data)
             const { randomNumber } = data
-            setLastNumber(randomNumber)
-            addToCalledNumbers(randomNumber)
+            setLastCalledNumber(randomNumber)
+            addCalledNumber(randomNumber)
         }
         const handleLineWon = (playerID: string) => {
             const lineWinner = players.get(playerID)
-            setLineWinner(lineWinner!)
-            increaseMarked(playerID)
+            setLineWinner(lineWinner)
+            // increaseMarked(playerID)
             toast(`${lineWinner?.username} won line`, { icon: '🎉' })
         }
         const handlePlayerMarked = (playerID: string) => {
             const playerMarked = players.get(playerID)
-            increaseMarked(playerID)
+            // increaseMarked(playerID)
             toast.success(`${playerMarked?.username} marked!`)
         }
 
         const handleBingoWon = (playerID: string) => {
             console.log('bingo', playerID)
             const bingoWinner = players.get(playerID)
-            increaseMarked(playerID)
-            setBingoWinner(bingoWinner!)
+            // increaseMarked(playerID)
+            setBingoWinner(bingoWinner)
             toast(`BINGO! ${bingoWinner?.username} won! `, { icon: '🎉' })
 
         }
@@ -76,9 +89,9 @@ export const BingoSection = () => {
             </div>
             {
                 gameStatus === 'started' && <section id='bingo-numbers'>
-                    <h2 className='h-12 font-bold text-center text-4xl mb-2'>{lastNumber}</h2>
+                    <h2 className='h-12 font-bold text-center text-4xl mb-2'>{lastCalledNumber}</h2>
                     <div>
-                        <BingoCard bingoNumbers={myNumbers} />
+                        <BingoCard bingoNumbers={myBingoNumbers} />
                         <div className="w-full relative z-0 bg-slate-300 h-2 mt-2 rounded-full">
                             <div className={cn(' relative z-0 bg-slate-800 h-2 mt-2 rounded-full', 'animate-reduction')}></div>
                         </div>
