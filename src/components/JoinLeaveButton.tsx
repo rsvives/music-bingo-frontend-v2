@@ -1,10 +1,12 @@
 import { Button } from "./ui/Button"
 import { useAuthStore } from "@/store/useAuthStore"
 import { useGameStore } from "@/store/useGameStore"
+import { useRoomStore } from "@/store/useRoomStore"
 
 export const JoinLeaveButton = () => {
     const { socket, authUser } = useAuthStore()
-    const { roomId, code, isJoined, gameStatus, setJoined } = useGameStore()
+    const { gameStatus } = useGameStore()
+    const { roomId, code, isJoined, setJoined } = useRoomStore()
 
     const handleJoin = () => {
         console.log('joining')
