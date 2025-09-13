@@ -1,7 +1,8 @@
 import { twMerge } from "tailwind-merge"
 import clsx from "clsx"
+import superjson from 'superjson'
 import type { ClassValue } from "clsx"
-import { useGameStore } from "@/store/useGameStore"
+import type { PersistStorage } from "zustand/middleware"
 
 export function cn(...inputs: Array<ClassValue>) {
     return twMerge(
@@ -9,6 +10,14 @@ export function cn(...inputs: Array<ClassValue>) {
     )
 }
 
-export const checkLine = () => useGameStore.getState().myNumbers.some((cardRow) => cardRow.every(n => useGameStore.getState().myMarkedNumbers.has(n)))
-
-export const checkBingo = () => useGameStore.getState().myNumbers.every((cardRow) => cardRow.every(n => useGameStore.getState().myMarkedNumbers.has(n)))
+export const createSuperjsonStorage = <T>(): PersistStorage<T> => ({
+    getItem: (name) => {
+        const str = localStorage.getItem(name)
+        if (!str) return null
+        return superjson.parse(str)
+    },
+    setItem: (name, value) => {
+        localStorage.setItem(name, superjson.stringify(value))
+    },
+    removeItem: (name) => localStorage.removeItem(name),
+})
