@@ -4,6 +4,9 @@ import { useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/Button'
 import { useGameStore } from '@/store/useGameStore'
+import { usePlayersStore } from '@/store/usePlayersStore'
+import { useNumbersStore } from '@/store/useNumbersStore'
+import { useRoomStore } from '@/store/useRoomStore'
 
 export const Route = createFileRoute('/')({
     component: RouteComponent,
@@ -12,10 +15,20 @@ export const Route = createFileRoute('/')({
 function RouteComponent() {
 
     const { reset: resetGameStore } = useGameStore()
+    const { resetPlayers } = usePlayersStore()
+    const { resetNumbersStore } = useNumbersStore()
+    const { resetRoomStore } = useRoomStore()
     useEffect(() => {
         setConfetti(true)
         localStorage.removeItem('flabingo-game-storage')
+        localStorage.removeItem('flabingo-room-storage')
+        localStorage.removeItem('flabingo-players-storage')
+        localStorage.removeItem('flabingo-numbers-storage')
         resetGameStore()
+        resetPlayers()
+        resetNumbersStore()
+        resetRoomStore()
+
     }, [])
     const { confetti, setConfetti } = useGameStore()
     return (<>

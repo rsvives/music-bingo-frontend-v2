@@ -34,7 +34,7 @@ export const BingoNumber = ({ number, row, col }: props) => {
                 socket?.emit('game:bingo', authUser)
                 return
             }
-            socket?.emit('game:mark-number')
+            socket?.emit('game:mark-number', myMarkedNumbers.size)
         }
     }
 

@@ -2,11 +2,10 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { SignIn, useUser } from '@clerk/clerk-react'
 import { useEffect } from 'react'
 import superjson from 'superjson'
-// import { socket } from '../../socket'
-
-// import { useGameStore } from '@/store/gameStore'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useGameStore } from '@/store/useGameStore'
+import { useRoomStore } from '@/store/useRoomStore'
+import { usePlayersStore } from '@/store/usePlayersStore'
 
 export const Route = createFileRoute('/_auth/room')({
   component: Room,
@@ -18,7 +17,9 @@ export const Route = createFileRoute('/_auth/room')({
 function Room() {
   const { isSignedIn, isLoaded, } = useUser()
   const { socket, authUser } = useAuthStore()
-  const { createRoom, setAdmin, setRoomData, addPlayer, setPlayers } = useGameStore()
+  const { createRoom } = useGameStore()
+  const { setAdmin, setRoomData } = useRoomStore()
+  const { addPlayer, setPlayers } = usePlayersStore()
   const navigate = useNavigate()
 
 
@@ -26,6 +27,7 @@ function Room() {
     console.log('handle create game')
     if (authUser) {
       console.log(authUser)
+      usePlayersStore.getState().setCurrentPlayer(authUser.id)
       console.log('starting')
       createRoom(authUser)
     }
@@ -44,7 +46,8 @@ function Room() {
         const { roomId, code, lastPlayerJoined: admin } = data
         setAdmin(admin)
         addPlayer(admin)
-        console.log(useGameStore.getState().players)
+        // setCurrentPlayer(admin.id)
+        // console.log(useGameStore.getState().players)
         setRoomData({ roomId: roomId, code })
         navigate({ to: '/room/$roomId', params: { roomId }, search: { code } })
       }

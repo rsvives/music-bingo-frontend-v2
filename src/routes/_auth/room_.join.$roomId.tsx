@@ -8,6 +8,9 @@ import { useGameStore } from '@/store/useGameStore'
 import { API_URL } from '@/lib/config'
 
 import { BingoSection } from '@/components/BingoSection'
+import { usePlayersStore } from '@/store/usePlayersStore'
+import { useRoomStore } from '@/store/useRoomStore'
+import { useNumbersStore } from '@/store/useNumbersStore'
 
 
 
@@ -35,10 +38,12 @@ export const Route = createFileRoute('/_auth/room_/join/$roomId')({
         const { json, meta } = await res.json()
         const data: { admin: Player, players: Map<PlayerId, Player>, roomId: string, code: string } = superjson.deserialize({ json, meta })
         console.log('check', data)
-        const gameStore = useGameStore.getState()
-        gameStore.setPlayers(data.players)
-        gameStore.setAdmin(data.admin)
-        gameStore.setRoomData({ roomId: data.roomId, code: data.code })
+
+        // TODO: check game status 
+        usePlayersStore.getState().setPlayers(data.players)
+        useRoomStore.getState().setAdmin(data.admin)
+        useRoomStore.getState().setRoomData({ roomId: data.roomId, code: data.code })
+
         return data
     },
     validateSearch: (search): RoomParams => {
@@ -51,21 +56,11 @@ export const Route = createFileRoute('/_auth/room_/join/$roomId')({
 function LobbyRoom() {
 
     const { socket } = useAuthStore()
-    const { gameStatus, isJoined, setGameStatus, setMyNumbers, } = useGameStore()
+    const { gameStatus, setGameStatus, } = useGameStore()
+    const { isJoined } = useRoomStore()
+    const { setMyBingoNumbers } = useNumbersStore()
+    const { currentPlayer } = usePlayersStore()
 
-    const handleGameStarted = () => {
-        socket?.on('game:started', ({ json, meta }) => {
-            const { players: playersWithNumbers }: { players: Map<PlayerId, Player> } = superjson.deserialize({ json, meta })
-            console.log(playersWithNumbers)
-            setGameStatus('started')
-
-            const myself = playersWithNumbers.get(useAuthStore.getState().authUser!.id)
-            if (myself) {
-                setMyNumbers(myself.numbers)
-            }
-        })
-    }
-    useEffect(handleGameStarted, [socket])
 
 
     return (

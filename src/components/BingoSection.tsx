@@ -1,7 +1,9 @@
 import { useEffect } from "react"
 import ConfettiExplosion from "react-confetti-explosion"
 import toast from "react-hot-toast"
+import superjson from 'superjson'
 import { BingoCard } from "./BingoCard"
+import type { Player, PlayerId } from "@/types"
 import { useAuthStore } from "@/store/useAuthStore"
 import { useGameStore } from "@/store/useGameStore"
 import { cn } from "@/lib/utils"
@@ -12,14 +14,14 @@ import { useRoomStore } from "@/store/useRoomStore"
 export const BingoSection = () => {
     const { socket, authUser } = useAuthStore()
     const { admin } = useRoomStore()
-    const { gameStatus, confetti, setLineWinner, setBingoWinner, setConfetti, } = useGameStore()
-    const { players } = usePlayersStore()
+    const { gameStatus, confetti, setLineWinner, setBingoWinner, setConfetti, setGameStatus } = useGameStore()
+    const { updateScore } = usePlayersStore()
     const {
         lastCalledNumber,
         setLastCalledNumber,
         calledNumbers,
         addCalledNumber,
-        myBingoNumbers
+        myBingoNumbers, setMyBingoNumbers
     } = useNumbersStore()
 
     const SECONDS_TO_NEXT_NUMBER = 7.5
@@ -49,38 +51,71 @@ export const BingoSection = () => {
             addCalledNumber(randomNumber)
         }
         const handleLineWon = (playerID: string) => {
-            const lineWinner = players.get(playerID)
-            setLineWinner(lineWinner)
-            // increaseMarked(playerID)
-            toast(`${lineWinner?.username} won line`, { icon: '🎉' })
+            const lineWinner = usePlayersStore.getState().players.get(playerID)
+            if (lineWinner) {
+                setLineWinner(lineWinner)
+                // increaseMarked(playerID)
+                updateScore(lineWinner.id, lineWinner.score + 1)
+
+                toast(`${lineWinner.username} won line`, { icon: '🎉' })
+
+            }
         }
-        const handlePlayerMarked = (playerID: string) => {
-            const playerMarked = players.get(playerID)
+        const handlePlayerMarked = (playerID: string, score: number) => {
+
+            console.log('marrrkkk', playerID, score)
+            const playerMarked = usePlayersStore.getState().players.get(playerID)
+            console.log('marked', playerMarked)
             // increaseMarked(playerID)
-            toast.success(`${playerMarked?.username} marked!`)
+            if (playerMarked) {
+
+                updateScore(playerMarked.id, score)
+
+                if (playerID !== usePlayersStore.getState().currentPlayer!) {
+                    toast.success(`${playerMarked.username} marked!`)
+                }
+            }
         }
 
         const handleBingoWon = (playerID: string) => {
             console.log('bingo', playerID)
-            const bingoWinner = players.get(playerID)
+            const bingoWinner = usePlayersStore.getState().players.get(playerID)
+            if (bingoWinner) {
+                updateScore(bingoWinner.id, bingoWinner.score + 1)
+                setBingoWinner(bingoWinner)
+                toast(`BINGO! ${bingoWinner.username} won! `, { icon: '🎉' })
+            }
             // increaseMarked(playerID)
-            setBingoWinner(bingoWinner)
-            toast(`BINGO! ${bingoWinner?.username} won! `, { icon: '🎉' })
 
         }
+        const handleGameStarted = ({ json, meta }) => {
+            const { players: playersWithNumbers }: { players: Map<PlayerId, Player> } = superjson.deserialize({ json, meta })
+            console.log('started', playersWithNumbers)
+            setGameStatus('started')
+
+            const myself = playersWithNumbers.get(usePlayersStore.getState().currentPlayer!)
+            console.log('myself', myself, usePlayersStore.getState().currentPlayer)
+            if (myself) {
+                setMyBingoNumbers(myself.numbers)
+            }
+        }
+
 
         socket?.on('game:number-generated', handleNumberGenerated)
         socket?.on('player:line', handleLineWon)
         socket?.on('player:bingo', handleBingoWon)
         socket?.on('player:marked', handlePlayerMarked)
+        socket?.on('game:started', handleGameStarted)
         return () => {
             socket?.off('game:number-generated', handleNumberGenerated)
             socket?.off('player:line', handleLineWon)
             socket?.off('player:bingo', handleBingoWon)
             socket?.on('player:marked', handlePlayerMarked)
+            socket?.off('game:started', handleGameStarted)
 
         }
     }, [socket])
+
 
     return (
         <div>

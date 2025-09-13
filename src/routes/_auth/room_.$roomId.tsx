@@ -9,6 +9,9 @@ import { useGameStore } from '@/store/useGameStore'
 import { useAuthStore } from '@/store/useAuthStore'
 import { API_URL, FRONTEND_URL } from '@/lib/config'
 import { BingoSection } from '@/components/BingoSection'
+import { useRoomStore } from '@/store/useRoomStore'
+import { useNumbersStore } from '@/store/useNumbersStore'
+import { usePlayersStore } from '@/store/usePlayersStore'
 
 type RoomParams = {
     code?: string
@@ -28,13 +31,14 @@ export const Route = createFileRoute('/_auth/room_/$roomId')({
             body: JSON.stringify({ roomId: params.roomId, code })
         })
         if (res.status == 404) throw redirect({ to: '/' })
+
         const { json, meta } = await res.json()
         const { roomId }: { roomId: string } = superjson.deserialize({ json, meta })
+
         console.log('check')
-        const gameStore = useGameStore.getState()
         // gameStore.setPlayers(data.players)
         if (roomId && code) {
-            gameStore.setRoomData({ roomId, code })
+            useRoomStore.getState().setRoomData({ roomId, code })
             // gameStore.setAdmin()
             return { roomId, code }
         }
@@ -50,38 +54,16 @@ function SpecificRoom() {
 
     const { roomId: roomIdParams } = Route.useParams()
     const { socket } = useAuthStore()
-    const { code, roomId, gameStatus, setGameStatus, setMyNumbers } = useGameStore()
+    const { gameStatus, setGameStatus } = useGameStore()
+    const { roomId, code } = useRoomStore()
+    const { setMyBingoNumbers } = useNumbersStore()
+    const { currentPlayer } = usePlayersStore()
     const joinLink = `${FRONTEND_URL}/room/join/${roomId}?code=${code}`
-
-
-
-
-
 
     const startGame = () => {
         console.log('start game')
         socket?.emit('game:start', { roomId })
     }
-
-    const handleGameStarted = () => {
-        socket?.on('game:started', ({ json, meta }) => {
-            const { players: playersWithNumbers }: { players: Map<PlayerId, Player> } = superjson.deserialize({ json, meta })
-            console.log(playersWithNumbers)
-            setGameStatus('started')
-
-            const myself = playersWithNumbers.get(useAuthStore.getState().authUser!.id)
-            if (myself) {
-                setMyNumbers(myself.numbers)
-            }
-
-
-        })
-    }
-    useEffect(handleGameStarted, [socket])
-
-
-
-
 
     const copyJoinLink = () => {
         navigator.clipboard.writeText(joinLink)

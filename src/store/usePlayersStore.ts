@@ -7,26 +7,31 @@ import { createSuperjsonStorage } from '@/lib/utils';
 
 interface PlayersState {
     players: Map<PlayerId, Player>
-    currentPlayer: Player | null
+    currentPlayer: string | null
+    isAdmin: boolean | null
     addPlayer: (player: Player) => void
     setPlayers: (players: PlayersMap) => void
     removePlayer: (playerId: PlayerId) => void
     updatePlayer: (playerId: PlayerId, updates: Partial<Player>) => void
     updateScore: (playerId: PlayerId, score: number) => void
-    setCurrentPlayer: (player: Player) => void
+    setCurrentPlayer: (playerId: string) => void
+    setAdmin: (bool: boolean) => void
     resetPlayers: () => void
 }
 const storage = createSuperjsonStorage<PlayersState>()
 
 export const usePlayersStore = create<PlayersState>()(
     persist(
-        (set, _, store) => ({
+        (set, get, store) => ({
             players: new Map(),
             currentPlayer: null,
+            isAdmin: null,
 
             addPlayer: (playerData) => set((state) => {
                 const updatedPlayers = state.players
                 updatedPlayers.set(playerData.id, playerData)
+
+                if (playerData.isAdmin) get().setAdmin(true)
 
                 return { players: updatedPlayers }
             }),
@@ -64,7 +69,7 @@ export const usePlayersStore = create<PlayersState>()(
             }),
 
             setCurrentPlayer: (player) => set({ currentPlayer: player }),
-
+            setAdmin: (boolean) => { set({ isAdmin: boolean }) },
             resetPlayers: () => set(store.getInitialState()),
         }),
         {

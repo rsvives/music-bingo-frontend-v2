@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { io } from 'socket.io-client'
 import toast from 'react-hot-toast';
+import { usePlayersStore } from './usePlayersStore';
 import type { Socket } from 'socket.io-client';
 import type { User } from '@/types'
 import type { UserResource } from '@clerk/types'
@@ -39,7 +40,7 @@ export const useAuthStore = create<State & Actions>((set, get) => ({
             //     socket.auth = { sessionID };
             //     socket.connect();
             // }
-
+            // usePlayersStore.getState().setCurrentPlayer(user.id)
             if (!get().socket?.connected) get().connectSocket()
         }
 
@@ -53,6 +54,7 @@ export const useAuthStore = create<State & Actions>((set, get) => ({
         console.log('auth store socket')
 
         const socket = io(API_URL, { autoConnect: false })
+
         socket.auth = { user: authUser }
         if (sessionID) {
             socket.auth = { ...socket.auth, sessionID };

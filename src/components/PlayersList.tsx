@@ -13,16 +13,18 @@ export const PlayerList = () => {
     const { socket, authUser } = useAuthStore()
     const { admin, } = useRoomStore()
     const { players,
+
         setPlayers,
         removePlayer } = usePlayersStore()
 
 
     useEffect(() => {
         const onRoomJoined = ({ json, meta }: SuperJSONValue) => {
-            const data: { players: Map<PlayerId, Player> } = superjson.deserialize({ json, meta })
+            const data: { players: Map<PlayerId, Player>, lastJoinedPlayer: Player } = superjson.deserialize({ json, meta })
             console.log('joined', data)
-            const { players: receivedPlayers } = data
+            const { players: receivedPlayers, lastJoinedPlayer } = data
             setPlayers(receivedPlayers)
+            usePlayersStore.getState().setCurrentPlayer(authUser!.id)
         }
 
         const onRoomLeaved = (playerId: string) => {
@@ -64,7 +66,8 @@ export const PlayerList = () => {
 }
 
 const PlayerCard = ({ player }: { player: Player }) => {
-    const progress = `${player.marked / 15 * 100}%`
+
+    const progress = player.score ? `${player.score / 15 * 100}` : 0
 
     console.log('progress', progress)
     return (
@@ -76,7 +79,7 @@ const PlayerCard = ({ player }: { player: Player }) => {
                 </p>
                 {player.isAdmin && <span className="text-[9px] sm:text-xs font-bold px-2 py-1 rounded-full bg-slate-300 text-slate-700">admin</span>}
             </div>
-            <div className={'h-[2px] bg-slate-400'} style={{ width: progress }}></div>
+            <div className={'h-[2px] bg-slate-400'} style={{ width: progress + '%' }}></div>
         </li>
     )
 
