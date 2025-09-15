@@ -1,10 +1,8 @@
 import { Copy } from 'lucide-react'
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { useEffect } from 'react'
 import QRCode from 'react-qr-code'
 import superjson from 'superjson'
 import toast from 'react-hot-toast'
-import type { Player, PlayerId } from '@/types'
 import { useGameStore } from '@/store/useGameStore'
 import { useAuthStore } from '@/store/useAuthStore'
 import { API_URL, FRONTEND_URL } from '@/lib/config'
@@ -12,6 +10,7 @@ import { BingoSection } from '@/components/BingoSection'
 import { useRoomStore } from '@/store/useRoomStore'
 import { useNumbersStore } from '@/store/useNumbersStore'
 import { usePlayersStore } from '@/store/usePlayersStore'
+import { GameControls } from '@/components/GameControls'
 
 type RoomParams = {
     code?: string
@@ -51,13 +50,10 @@ export const Route = createFileRoute('/_auth/room_/$roomId')({
 })
 
 function SpecificRoom() {
-
     const { roomId: roomIdParams } = Route.useParams()
     const { socket } = useAuthStore()
-    const { gameStatus, setGameStatus } = useGameStore()
+    const { gameStatus } = useGameStore()
     const { roomId, code } = useRoomStore()
-    const { setMyBingoNumbers } = useNumbersStore()
-    const { currentPlayer } = usePlayersStore()
     const joinLink = `${FRONTEND_URL}/room/join/${roomId}?code=${code}`
 
     const startGame = () => {
@@ -77,7 +73,7 @@ function SpecificRoom() {
 
     return (
 
-        <main className='flex flex-1 justify-center items-center' >
+        <main className='flex flex-col gap-4 flex-1 justify-center items-center' >
 
             {gameStatus === 'waiting' &&
                 <section id='room-details' className='w-full p-4'>
@@ -100,6 +96,7 @@ function SpecificRoom() {
             }
 
             <BingoSection />
+            <GameControls />
         </main >
     )
 }
