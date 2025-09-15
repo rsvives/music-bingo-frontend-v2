@@ -38,7 +38,7 @@ export const BingoSection = () => {
 
     const handleNextNumber = () => {
         console.log('next number')
-        socket?.emit('game:next-number', ({ calledNumbers: [...calledNumbers] }))
+        socket?.emit('game:next-number', ({ calledNumbers: [...useNumbersStore.getState().calledNumbers] }))
     }
 
 
@@ -84,6 +84,7 @@ export const BingoSection = () => {
                 updateScore(bingoWinner.id, bingoWinner.score + 1)
                 setBingoWinner(bingoWinner)
                 toast(`BINGO! ${bingoWinner.username} won! `, { icon: '🎉' })
+                socket?.emit('game:end')
             }
             // increaseMarked(playerID)
 
@@ -99,6 +100,7 @@ export const BingoSection = () => {
                 setMyBingoNumbers(myself.numbers)
             }
         }
+
 
 
         socket?.on('game:number-generated', handleNumberGenerated)
@@ -118,22 +120,36 @@ export const BingoSection = () => {
 
 
     return (
-        <div>
+        <>
             <div>
                 {confetti && <ConfettiExplosion particleCount={200} onComplete={() => setConfetti(false)} force={0.5} />}
             </div>
             {
-                gameStatus === 'started' && <section id='bingo-numbers'>
-                    <h2 className='h-12 font-bold text-center text-4xl mb-2'>{lastCalledNumber}</h2>
+                <section id='bingo-numbers'>
+                    {
+                        gameStatus === 'started' &&
+                        <h2 className='h-12 font-bold text-center text-4xl mb-2'>
+                            {lastCalledNumber}
+                        </h2>
+                    }
+                    {gameStatus === 'paused' &&
+                        <h2 className='h-12 font-bold text-center text-xl mb-2 animate-pulse'>
+                            game paused
+                        </h2>
+                    }
                     <div>
-                        <BingoCard bingoNumbers={myBingoNumbers} />
-                        <div className="w-full relative z-0 bg-slate-300 h-2 mt-2 rounded-full">
-                            <div className={cn(' relative z-0 bg-slate-800 h-2 mt-2 rounded-full', 'animate-reduction')}></div>
-                        </div>
+                        <BingoCard bingoNumbers={myBingoNumbers} className={gameStatus === 'paused' && 'bg-slate-300 text-slate-400 animate-pulse'} />
+                        {gameStatus === 'started' ?
+                            <div className="w-full relative z-0 bg-slate-300 h-2 mt-2 rounded-full">
+                                <div className={cn(' relative z-0 bg-slate-800 h-2 rounded-full', 'animate-reduction')}></div>
+                            </div>
+                            :
+                            <div className="h-2 mt-2"></div>
+                        }
 
                     </div>
                 </section>
             }
-        </div>
+        </>
     )
 }
