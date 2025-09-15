@@ -19,6 +19,8 @@ export const Button = ({ children, fill, color, className, ...rest }: ButtonProp
                 "border-2 border-flabingo-400 text-flabingo-400 hover:bg-flabingo-200": color === 'primary' && fill === 'outline',
                 "bg-slate-800 text-white hover:bg-slate-600": color === 'secondary' && fill === 'solid',
                 "border-2 border-slate-800 text-slate-800 hover:bg-slate-400": color === 'secondary' && fill === 'outline',
+                " text-slate-800 hover:text-flabingo-500 hover:bg-flabingo-50": color === 'primary' && fill === 'ghost',
+                " text-slate-800 hover:bg-slate-100 ": color === 'secondary' && fill === 'ghost',
             }
         )}
             {...rest}>
