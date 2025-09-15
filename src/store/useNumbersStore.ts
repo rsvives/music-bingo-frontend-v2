@@ -17,7 +17,6 @@ type Actions = {
     setMyBingoNumbers: (numbers: [Array<number>, Array<number>, Array<number>]) => void,
     checkLine: () => boolean,
     checkBingo: () => boolean,
-
     resetNumbersStore: () => void
 }
 
@@ -64,7 +63,14 @@ export const useNumbersStore = create<State & Actions>()(
                 return get().myBingoNumbers.every((cardRow) => cardRow.every(n => get().myMarkedNumbers.has(n)));
             },
 
-            resetNumbersStore: () => { set(store.getInitialState()) }
+            resetNumbersStore: () => {
+                set({
+                    lastCalledNumber: null,
+                    calledNumbers: new Set(),
+                    myMarkedNumbers: new Set(),
+                    myBingoNumbers: [[], [], []],
+                })
+            }
         }), {
         name: 'flabingo-numbers-storage', // name of the item in the storage (must be unique)
         storage,

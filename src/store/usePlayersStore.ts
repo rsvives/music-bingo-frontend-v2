@@ -16,6 +16,7 @@ interface PlayersState {
     updateScore: (playerId: PlayerId, score: number) => void
     setCurrentPlayer: (playerId: string) => void
     setAdmin: (bool: boolean) => void
+    resetScores: () => void
     resetPlayers: () => void
 }
 const storage = createSuperjsonStorage<PlayersState>()
@@ -70,6 +71,19 @@ export const usePlayersStore = create<PlayersState>()(
 
             setCurrentPlayer: (player) => set({ currentPlayer: player }),
             setAdmin: (boolean) => { set({ isAdmin: boolean }) },
+            resetScores: () => {
+                const previousPlayers = get().players
+                const updatedPlayers = new Map()
+                previousPlayers.forEach((p: Player) => {
+                    updatedPlayers.set(p.id, {
+                        ...p,
+                        numbers: [[], [], []],
+                        marked: new Set(),
+                        score: 0,
+                    })
+                })
+                set({ players: updatedPlayers })
+            },
             resetPlayers: () => set(store.getInitialState()),
         }),
         {
