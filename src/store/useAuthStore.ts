@@ -1,11 +1,11 @@
 import { create } from 'zustand'
 import { io } from 'socket.io-client'
 import toast from 'react-hot-toast';
-import { usePlayersStore } from './usePlayersStore';
 import type { Socket } from 'socket.io-client';
 import type { User } from '@/types'
 import type { UserResource } from '@clerk/types'
 import { API_URL } from '@/lib/config';
+import { handleGameEnded, handleGamePaused, handleGameRestarted, handleGameResumed } from '@/socket/listeners';
 // import { socket } from '@/socket'
 
 
@@ -74,9 +74,20 @@ export const useAuthStore = create<State & Actions>((set, get) => ({
         socket.on("connect_error", (err) => {
             if (err.message === "invalid user") {
                 toast.error('Invalid user')
+            } else {
+                toast.error('connection error')
             }
+
         });
+
+
+
+        socket.on('game:paused', handleGamePaused)
+        socket.on('game:resumed', handleGameResumed)
+        socket.on('game:restarted', handleGameRestarted)
+        socket.on('game:ended', handleGameEnded)
         socket.on('disconnect', () => get().disconnectSocket())
+
 
     },
     disconnectSocket: () => {
@@ -84,6 +95,10 @@ export const useAuthStore = create<State & Actions>((set, get) => ({
 
         get().socket?.off('connect_error')
         get().socket?.off('disconnect', () => set({ socket: null }))
+        get().socket?.off('game:paused', handleGamePaused)
+        get().socket?.off('game:resumed', handleGameResumed)
+        get().socket?.off('game:restarted', handleGameRestarted)
+        get().socket?.off('game:ended', handleGameEnded)
         get().socket?.disconnect()
         // }
     },

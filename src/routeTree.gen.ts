@@ -16,6 +16,7 @@ import { Route as AuthRouteRouteImport } from './routes/_auth/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DemoClerkRouteImport } from './routes/demo.clerk'
 import { Route as AuthRoomRouteImport } from './routes/_auth/room'
+import { Route as AuthGame_overRouteImport } from './routes/_auth/game_over'
 import { Route as AuthRoomRoomIdRouteImport } from './routes/_auth/room_.$roomId'
 import { Route as AuthRoomJoinRoomIdRouteImport } from './routes/_auth/room_.join.$roomId'
 
@@ -53,6 +54,11 @@ const AuthRoomRoute = AuthRoomRouteImport.update({
   path: '/room',
   getParentRoute: () => AuthRouteRoute,
 } as any)
+const AuthGame_overRoute = AuthGame_overRouteImport.update({
+  id: '/game_over',
+  path: '/game_over',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
 const AuthRoomRoomIdRoute = AuthRoomRoomIdRouteImport.update({
   id: '/room_/$roomId',
   path: '/room/$roomId',
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/sing-out': typeof SingOutRoute
+  '/game_over': typeof AuthGame_overRoute
   '/room': typeof AuthRoomRoute
   '/demo/clerk': typeof DemoClerkRoute
   '/room/$roomId': typeof AuthRoomRoomIdRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/sing-out': typeof SingOutRoute
+  '/game_over': typeof AuthGame_overRoute
   '/room': typeof AuthRoomRoute
   '/demo/clerk': typeof DemoClerkRoute
   '/room/$roomId': typeof AuthRoomRoomIdRoute
@@ -91,6 +99,7 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/sing-out': typeof SingOutRoute
+  '/_auth/game_over': typeof AuthGame_overRoute
   '/_auth/room': typeof AuthRoomRoute
   '/demo/clerk': typeof DemoClerkRoute
   '/_auth/room_/$roomId': typeof AuthRoomRoomIdRoute
@@ -103,6 +112,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/sing-out'
+    | '/game_over'
     | '/room'
     | '/demo/clerk'
     | '/room/$roomId'
@@ -113,6 +123,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/sing-out'
+    | '/game_over'
     | '/room'
     | '/demo/clerk'
     | '/room/$roomId'
@@ -124,6 +135,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/sing-out'
+    | '/_auth/game_over'
     | '/_auth/room'
     | '/demo/clerk'
     | '/_auth/room_/$roomId'
@@ -190,6 +202,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRoomRouteImport
       parentRoute: typeof AuthRouteRoute
     }
+    '/_auth/game_over': {
+      id: '/_auth/game_over'
+      path: '/game_over'
+      fullPath: '/game_over'
+      preLoaderRoute: typeof AuthGame_overRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
     '/_auth/room_/$roomId': {
       id: '/_auth/room_/$roomId'
       path: '/room/$roomId'
@@ -208,12 +227,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthRouteRouteChildren {
+  AuthGame_overRoute: typeof AuthGame_overRoute
   AuthRoomRoute: typeof AuthRoomRoute
   AuthRoomRoomIdRoute: typeof AuthRoomRoomIdRoute
   AuthRoomJoinRoomIdRoute: typeof AuthRoomJoinRoomIdRoute
 }
 
 const AuthRouteRouteChildren: AuthRouteRouteChildren = {
+  AuthGame_overRoute: AuthGame_overRoute,
   AuthRoomRoute: AuthRoomRoute,
   AuthRoomRoomIdRoute: AuthRoomRoomIdRoute,
   AuthRoomJoinRoomIdRoute: AuthRoomJoinRoomIdRoute,

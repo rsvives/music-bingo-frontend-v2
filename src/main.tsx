@@ -13,7 +13,7 @@ import { ClerkWrapper, useClerkAuth } from './integrations/clerk/provider.tsx'
 import { useAuthStore } from './store/useAuthStore.ts'
 
 // Create a new router instance
-const router = createRouter({
+export const router = createRouter({
   routeTree,
   context: {
     auth: undefined!,
