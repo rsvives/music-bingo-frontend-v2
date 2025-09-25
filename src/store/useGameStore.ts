@@ -1,8 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { useAuthStore } from './useAuthStore'
 import type { Player, User } from '@/types'
 import { createSuperjsonStorage } from '@/lib/utils'
+import socket from '@/socket/socket'
 
 type State = {
 
@@ -37,13 +37,13 @@ export const useGameStore = create<State & Actions>()(
 
             startGame: (admin) => {
                 // get().setAdmin(admin)
-                console.log('starting from store')
+                // console.log('starting from store')
                 // get().addPlayer(admin)
-                useAuthStore.getState().socket?.emit('game:create', admin)
+                socket.emit('game:create', admin)
             },
             createRoom: (user) => {
-                console.log('creating room')
-                useAuthStore.getState().socket?.emit('room:create', user)
+                // console.log('creating room')
+                socket.emit('room:create', user)
             },
             setLineWinner: (player) => set(() => ({ lineWinner: player })),
             setBingoWinner: (player) => set(() => ({ bingoWinner: player })),
