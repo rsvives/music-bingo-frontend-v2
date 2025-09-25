@@ -4,8 +4,8 @@ import toast from 'react-hot-toast';
 // import type { Socket } from 'socket.io-client';
 import type { User } from '@/types'
 import type { UserResource } from '@clerk/types'
-import { API_URL } from '@/lib/config';
-import { handleGameEnded, handleGamePaused, handleGameRestarted, handleGameResumed, handleSocketSession, onPlayerDisconnect, onReconnect, onRoomJoined, onRoomLeaved, onRoomReady } from '@/socket/listeners';
+// import { API_URL } from '@/lib/config';
+import { handleGameEnded, handleGamePaused, handleGameRestarted, handleGameResumed, handleSocketSession, onPlayerDisconnect, onPlayerRejoined, onReconnect, onRoomJoined, onRoomLeaved, onRoomReady } from '@/socket/listeners';
 import socket from '@/socket/socket';
 // import { socket } from '@/socket'
 
@@ -92,6 +92,8 @@ export const useAuthStore = create<State & Actions>((set, get) => ({
         socket.on('room:joined', onRoomJoined)
         socket.on('room:leaved', onRoomLeaved)
         socket.on('player:disconnected', onPlayerDisconnect)
+        socket.on('player:rejoined', onPlayerRejoined)
+
 
         socket.on('disconnect', () => {
             console.log('disconnect')
@@ -113,7 +115,8 @@ export const useAuthStore = create<State & Actions>((set, get) => ({
         socket.off('room:leaved', onRoomLeaved)
         socket.off('room:ready', onRoomReady)
         socket.off('room:reconnect', onReconnect)
-        socket.on('player:disconnected', onPlayerDisconnect)
+        socket.off('player:disconnected', onPlayerDisconnect)
+        socket.off('player:rejoined', onPlayerRejoined)
         socket.disconnect()
         // }
     },

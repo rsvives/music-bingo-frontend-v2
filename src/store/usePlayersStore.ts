@@ -16,6 +16,7 @@ interface PlayersState {
     updateScore: (playerId: PlayerId, score: number) => void
     setCurrentPlayer: (playerId: string) => void
     setAdmin: (bool: boolean) => void
+    setConnectionStatus: (playerId: PlayerId, bool: boolean) => void
     resetScores: () => void
     resetPlayers: () => void
 }
@@ -71,6 +72,14 @@ export const usePlayersStore = create<PlayersState>()(
 
             setCurrentPlayer: (player) => set({ currentPlayer: player }),
             setAdmin: (boolean) => { set({ isAdmin: boolean }) },
+            setConnectionStatus: (playerId, connectionStatus) => {
+                const updatedPlayers = get().players
+                const player = updatedPlayers.get(playerId)
+                if (player) {
+                    updatedPlayers.set(playerId, { ...player, connected: connectionStatus })
+                    set({ players: updatedPlayers })
+                }
+            },
             resetScores: () => {
                 const previousPlayers = get().players
                 const updatedPlayers = new Map()

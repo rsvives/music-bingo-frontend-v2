@@ -14,6 +14,7 @@ export interface Player extends User {
     score: number,
     numbers: [Array<number>, Array<number>, Array<number>],
     marked: 0 // TODO: should be a set with marked numbers
+    connected: boolean
 }
 
 // export type PlayersMap = Record<PlayerId, PlayerData>

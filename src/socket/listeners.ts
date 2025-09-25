@@ -58,12 +58,14 @@ export const onRoomJoined = ({ json, meta }: SuperJSONValue) => {
     console.log('joined', data)
     const { players: receivedPlayers } = data
     usePlayersStore.getState().setPlayers(receivedPlayers)
+    // useRoomStore.getState().setJoined(true)
     usePlayersStore.getState().setCurrentPlayer(useAuthStore.getState().authUser!.id)
 }
 
 export const onRoomLeaved = (playerId: string) => {
     console.log('leaved', playerId)
     usePlayersStore.getState().removePlayer(playerId)
+    // useRoomStore.getState().setJoined(false)
 }
 
 export const onRoomReady = (data) => {
@@ -90,6 +92,14 @@ export const onReconnect = ({ json, meta }) => {
     router.navigate({ to: '/room/$roomId', params: { roomId }, search: { code } })
 }
 
-export const onPlayerDisconnect = (playerId) => {
-    console.log('player disconnected', playerId)
+export const onPlayerDisconnect = (player: Player) => {
+    console.log('player disconnected', player)
+    usePlayersStore.getState().setConnectionStatus(player.id, false)
+    // useRoomStore.getState().setJoined(false)
+}
+
+export const onPlayerRejoined = (player: Player) => {
+    console.log('player rejoined 👍', player)
+    usePlayersStore.getState().setConnectionStatus(player.id, true)
+    // useRoomStore.getState().setJoined(true)
 }
