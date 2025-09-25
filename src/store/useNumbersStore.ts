@@ -14,6 +14,7 @@ type Actions = {
     addCalledNumber: (number: number) => Set<number>,
     setCalledNumbers: (numberSet: Set<number>) => Set<number>,
     addMarkedNumber: (number: number) => Set<number>,
+    setMarkedNumbers: (markedSet: Set<number>) => void,
     setMyBingoNumbers: (numbers: [Array<number>, Array<number>, Array<number>]) => void,
     checkLine: () => boolean,
     checkBingo: () => boolean,
@@ -45,6 +46,9 @@ export const useNumbersStore = create<State & Actions>()(
                 numberSet.forEach(number => updatedCalledNumbers.add(number)) // union() is still too new
                 set({ calledNumbers: updatedCalledNumbers })
                 return updatedCalledNumbers
+            },
+            setMarkedNumbers: (markedNumbersSet) => {
+                set({ myMarkedNumbers: markedNumbersSet })
             },
             addMarkedNumber: (number) => {
                 const updatedMarkedNumbers = get().myMarkedNumbers
