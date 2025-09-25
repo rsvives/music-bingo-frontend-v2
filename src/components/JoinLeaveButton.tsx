@@ -1,20 +1,19 @@
 import { Button } from "./ui/Button"
+import socket from "@/socket/socket"
 import { useAuthStore } from "@/store/useAuthStore"
-import { useGameStore } from "@/store/useGameStore"
 import { useRoomStore } from "@/store/useRoomStore"
 
 export const JoinLeaveButton = () => {
-    const { socket, authUser } = useAuthStore()
-    const { gameStatus } = useGameStore()
+    const { authUser } = useAuthStore()
     const { roomId, code, isJoined, setJoined } = useRoomStore()
 
     const handleJoin = () => {
         console.log('joining')
-        if (socket && !isJoined && gameStatus === 'waiting') {
+        if (!isJoined) {
             socket.emit('room:join', { room: roomId, code, user: authUser })
             setJoined(true)
         }
-        if (socket && isJoined) {
+        if (isJoined) {
             socket.emit('room:leave', { room: roomId, code, user: authUser })
             setJoined(false)
         }
