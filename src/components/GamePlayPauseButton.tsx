@@ -1,21 +1,20 @@
-import { PauseCircleIcon, PauseIcon, PlayCircleIcon, PlayIcon } from "lucide-react"
+import { PauseCircleIcon, PlayCircleIcon, } from "lucide-react"
 import { Button } from "./ui/Button"
 import { useGameStore } from "@/store/useGameStore"
-import { useAuthStore } from "@/store/useAuthStore"
+import socket from "@/socket/socket"
 
 export const GamePlayPauseButton = () => {
     const { gameStatus, setGameStatus } = useGameStore()
-    const { socket } = useAuthStore()
 
     const handleGameStatus = () => {
 
         if (gameStatus === 'started') {
-            socket?.emit('game:pause')
+            socket.emit('game:pause')
             setGameStatus('paused')
             return
         }
         if (gameStatus === 'paused') {
-            socket?.emit('game:resume')
+            socket.emit('game:resume')
             setGameStatus('started')
             return
         }
