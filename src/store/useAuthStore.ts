@@ -1,23 +1,25 @@
 import { create } from 'zustand'
-import { io } from 'socket.io-client'
+// import { io } from 'socket.io-client'
 import toast from 'react-hot-toast';
-import type { Socket } from 'socket.io-client';
+// import type { Socket } from 'socket.io-client';
 import type { User } from '@/types'
 import type { UserResource } from '@clerk/types'
 import { API_URL } from '@/lib/config';
-import { handleGameEnded, handleGamePaused, handleGameRestarted, handleGameResumed } from '@/socket/listeners';
+import { handleGameEnded, handleGamePaused, handleGameRestarted, handleGameResumed, handleSocketSession, onPlayerDisconnect, onReconnect, onRoomJoined, onRoomLeaved, onRoomReady } from '@/socket/listeners';
+import socket from '@/socket/socket';
 // import { socket } from '@/socket'
 
 
 
 type State = {
     authUser: User | null
-    socket: Socket | null
+    // socket: Socket | null
 }
 type Actions = {
+    checkAuth: (user: UserResource) => void
+    checkSession: () => void
     connectSocket: () => void,
     disconnectSocket: () => void,
-    checkAuth: (user: UserResource) => void
 }
 export const useAuthStore = create<State & Actions>((set, get) => ({
     socket: null,
@@ -41,36 +43,34 @@ export const useAuthStore = create<State & Actions>((set, get) => ({
             //     socket.connect();
             // }
             // usePlayersStore.getState().setCurrentPlayer(user.id)
-            if (!get().socket?.connected) get().connectSocket()
+            if (!socket.connected) get().connectSocket()
         }
 
 
     },
 
+    checkSession: () => {
+
+    },
+
     connectSocket: () => {
-        const sessionID = localStorage.getItem("sessionID");
         const { authUser } = get();
-        if (!authUser || get().socket?.connected) return
+        if (!authUser || socket.connected) return
         console.log('auth store socket')
 
-        const socket = io(API_URL, { autoConnect: false })
-
-        socket.auth = { user: authUser }
+        const sessionID = localStorage.getItem("sessionID");
+        socket.auth = { user: useAuthStore.getState().authUser }
         if (sessionID) {
             socket.auth = { ...socket.auth, sessionID };
+            socket.connect()
+        } else {
+            socket.auth = { user: authUser }
+            socket.connect()
         }
-        socket.connect()
+
         // set({ socket: socket })
-        socket.on('connect', () => set({ socket: socket }))
-        socket.on('session', ({ sessionID, user }) => {
-            console.log('session to localstorage', sessionID)
-            // attach the session ID to the next reconnection attempts
-            socket.auth = { sessionID };
-            // store it in the localStorage
-            localStorage.setItem("sessionID", sessionID);
-            // save the ID of the user
-            // socket.userID = user.id;
-        })
+        // socket.on('connect', () => set({ socket: socket }))
+
         socket.on("connect_error", (err) => {
             if (err.message === "invalid user") {
                 toast.error('Invalid user')
@@ -82,24 +82,39 @@ export const useAuthStore = create<State & Actions>((set, get) => ({
 
 
 
+        socket.on('session', handleSocketSession)
         socket.on('game:paused', handleGamePaused)
         socket.on('game:resumed', handleGameResumed)
         socket.on('game:restarted', handleGameRestarted)
         socket.on('game:ended', handleGameEnded)
-        socket.on('disconnect', () => get().disconnectSocket())
+        socket.on('room:ready', onRoomReady)
+        socket.on('room:reconnect', onReconnect)
+        socket.on('room:joined', onRoomJoined)
+        socket.on('room:leaved', onRoomLeaved)
+        socket.on('player:disconnected', onPlayerDisconnect)
+
+        socket.on('disconnect', () => {
+            console.log('disconnect')
+            get().disconnectSocket()
+        })
 
 
     },
     disconnectSocket: () => {
         // if (get().socket?.connected) {
 
-        get().socket?.off('connect_error')
-        get().socket?.off('disconnect', () => set({ socket: null }))
-        get().socket?.off('game:paused', handleGamePaused)
-        get().socket?.off('game:resumed', handleGameResumed)
-        get().socket?.off('game:restarted', handleGameRestarted)
-        get().socket?.off('game:ended', handleGameEnded)
-        get().socket?.disconnect()
+        socket.off('connect_error')
+        socket.off('disconnect', () => socket.disconnect())
+        socket.off('game:paused', handleGamePaused)
+        socket.off('game:resumed', handleGameResumed)
+        socket.off('game:restarted', handleGameRestarted)
+        socket.off('game:ended', handleGameEnded)
+        socket.off('room:joined', onRoomJoined)
+        socket.off('room:leaved', onRoomLeaved)
+        socket.off('room:ready', onRoomReady)
+        socket.off('room:reconnect', onReconnect)
+        socket.on('player:disconnected', onPlayerDisconnect)
+        socket.disconnect()
         // }
     },
 }))
