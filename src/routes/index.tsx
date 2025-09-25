@@ -19,15 +19,11 @@ function RouteComponent() {
     const { resetNumbersStore } = useNumbersStore()
     const { resetRoomStore } = useRoomStore()
     useEffect(() => {
-        setConfetti(true)
-        localStorage.removeItem('flabingo-game-storage')
-        localStorage.removeItem('flabingo-room-storage')
-        localStorage.removeItem('flabingo-players-storage')
-        localStorage.removeItem('flabingo-numbers-storage')
         resetGameStore()
         resetPlayers()
         resetNumbersStore()
         resetRoomStore()
+        setConfetti(true)
 
     }, [])
     const { confetti, setConfetti } = useGameStore()

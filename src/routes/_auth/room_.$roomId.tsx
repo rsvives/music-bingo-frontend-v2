@@ -4,13 +4,11 @@ import QRCode from 'react-qr-code'
 import superjson from 'superjson'
 import toast from 'react-hot-toast'
 import { useGameStore } from '@/store/useGameStore'
-import { useAuthStore } from '@/store/useAuthStore'
 import { API_URL, FRONTEND_URL } from '@/lib/config'
 import { BingoSection } from '@/components/BingoSection'
 import { useRoomStore } from '@/store/useRoomStore'
-import { useNumbersStore } from '@/store/useNumbersStore'
-import { usePlayersStore } from '@/store/usePlayersStore'
 import { GameControls } from '@/components/GameControls'
+import socket from '@/socket/socket'
 
 type RoomParams = {
     code?: string
@@ -51,14 +49,13 @@ export const Route = createFileRoute('/_auth/room_/$roomId')({
 
 function SpecificRoom() {
     const { roomId: roomIdParams } = Route.useParams()
-    const { socket } = useAuthStore()
     const { gameStatus } = useGameStore()
     const { roomId, code } = useRoomStore()
     const joinLink = `${FRONTEND_URL}/room/join/${roomId}?code=${code}`
 
     const startGame = () => {
         console.log('start game')
-        socket?.emit('game:start', { roomId })
+        socket.emit('game:start', { roomId })
     }
 
     const copyJoinLink = () => {

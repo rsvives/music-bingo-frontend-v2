@@ -1,9 +1,8 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { useEffect } from 'react'
+
 import { LoaderCircle } from 'lucide-react'
 import superjson from 'superjson'
 import type { Player, PlayerId } from '@/types'
-import { useAuthStore } from '@/store/useAuthStore'
 import { useGameStore } from '@/store/useGameStore'
 import { API_URL } from '@/lib/config'
 
@@ -14,13 +13,19 @@ import { useNumbersStore } from '@/store/useNumbersStore'
 
 
 
+
 type RoomParams = {
     code?: string
 }
 
 export const Route = createFileRoute('/_auth/room_/join/$roomId')({
     component: LobbyRoom,
-    // beforeLoad,
+    beforeLoad: () => {
+        useNumbersStore.getState().resetNumbersStore()
+        useRoomStore.getState().resetRoomStore()
+        usePlayersStore.getState().resetScores()
+        usePlayersStore.getState().resetPlayers()
+    },
     loaderDeps: ({ search: { code } }: { search: RoomParams }) => ({ code }),
     loader: async ({ params, deps }) => {
         const { code } = deps
@@ -43,6 +48,8 @@ export const Route = createFileRoute('/_auth/room_/join/$roomId')({
         usePlayersStore.getState().setPlayers(data.players)
         useRoomStore.getState().setAdmin(data.admin)
         useRoomStore.getState().setRoomData({ roomId: data.roomId, code: data.code })
+        // useNumbersStore.getState().setCalledNumbers()
+        // useNumbersStore.getState().setMyBingoNumbers()
 
         return data
     },
@@ -55,11 +62,10 @@ export const Route = createFileRoute('/_auth/room_/join/$roomId')({
 
 function LobbyRoom() {
 
-    const { socket } = useAuthStore()
-    const { gameStatus, setGameStatus, } = useGameStore()
+
+    const { gameStatus } = useGameStore()
     const { isJoined } = useRoomStore()
-    const { setMyBingoNumbers } = useNumbersStore()
-    const { currentPlayer } = usePlayersStore()
+
 
 
 
