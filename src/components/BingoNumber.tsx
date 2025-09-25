@@ -1,5 +1,6 @@
 
 import { cn } from "@/lib/utils"
+import socket from "@/socket/socket"
 import { useAuthStore } from "@/store/useAuthStore"
 import { useGameStore } from "@/store/useGameStore"
 import { useNumbersStore } from "@/store/useNumbersStore"
@@ -11,9 +12,9 @@ type props = {
 }
 
 export const BingoNumber = ({ number, row, col }: props) => {
-    const { authUser, socket } = useAuthStore()
+    const { authUser } = useAuthStore()
     const { setConfetti, lineWinner, gameStatus } = useGameStore()
-    const { lastCalledNumber, myMarkedNumbers, calledNumbers, addMarkedNumber, checkLine, checkBingo } = useNumbersStore()
+    const { myMarkedNumbers, calledNumbers, addMarkedNumber, checkLine, checkBingo } = useNumbersStore()
     const markedNumberClass = myMarkedNumbers.has(number) ? 'bg-slate-300' : ''
     const classes = `w-[56px] p-4 text-center rounded-md border-1 border-slate-200  ${markedNumberClass}`
 
@@ -27,16 +28,16 @@ export const BingoNumber = ({ number, row, col }: props) => {
             if (checkLine()) {
                 if (!lineWinner) {
                     setConfetti(true)
-                    socket?.emit('game:line', authUser)
+                    socket.emit('number:line', authUser)
                     return
                 }
             }
             if (checkBingo()) {
                 setConfetti(true)
-                socket?.emit('game:bingo', authUser)
+                socket.emit('number:bingo', authUser)
                 return
             }
-            socket?.emit('game:mark-number', myMarkedNumbers.size)
+            socket.emit('number:mark', myMarkedNumbers.size, number)
         }
     }
 
