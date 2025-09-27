@@ -1,5 +1,5 @@
 import { Outlet, createRootRoute } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+// import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { Toaster } from 'react-hot-toast'
 import Header from '../components/Header'
 
@@ -14,7 +14,7 @@ export const Route = createRootRoute({
       <Header />
       <Outlet />
       <Toaster position='bottom-center' />
-      <TanStackRouterDevtools />
+      {/* <TanStackRouterDevtools /> */}
     </>
     )
   },
