@@ -3,7 +3,7 @@
 
 import superjson from 'superjson'
 import socket from './socket'
-import type { SuperJSONValue } from "node_modules/superjson/dist/types"
+import type { SuperJSONResult, SuperJSONValue } from "node_modules/superjson/dist/types"
 import type { Player, PlayersMap, User } from "@/types"
 import { useGameStore } from "@/store/useGameStore"
 import { useNumbersStore } from "@/store/useNumbersStore"
@@ -12,13 +12,22 @@ import { router } from "@/main"
 import { useAuthStore } from '@/store/useAuthStore'
 import { useRoomStore } from '@/store/useRoomStore'
 
-export const handleSocketSession = ({ meta, json }) => {
-    const data = superjson.deserialize({ meta, json })
-    const { sessionID, user, bingoNumbers, markedNumbers, calledNumbers }: { sessionID: string, user: User, bingoNumbers: [Array<number>, Array<number>, Array<number>] | null, markedNumbers: Set<number> | null, calledNumbers: Set<number> | null } = data
+type SocketSessionData = {
+    sessionID: string,
+    user: User,
+    bingoNumbers: [Array<number>, Array<number>, Array<number>] | null,
+    markedNumbers: Set<number> | null,
+    calledNumbers: Set<number> | null
+}
+export const handleSocketSession = ({ meta, json }: SuperJSONResult) => {
+    const data: SocketSessionData = superjson.deserialize({ meta, json })
+    const { sessionID, user, bingoNumbers, markedNumbers, calledNumbers } = data
     console.log('session to localstorage', sessionID, bingoNumbers)
     socket.auth = { sessionID };
     localStorage.setItem("sessionID", sessionID);
+
     socket.userID = user.id;
+
     if (bingoNumbers) {
         useNumbersStore.getState().setMyBingoNumbers(bingoNumbers)
     }
@@ -68,22 +77,16 @@ export const onRoomLeaved = (playerId: string) => {
     useRoomStore.getState().setJoined(false)
 }
 
-export const onRoomReady = (data) => {
+export const onRoomReady = ({ roomId, code, lastPlayerJoined: admin }: { roomId: string, code: string, lastPlayerJoined: Player }) => {
     console.log('room:ready')
-    console.log(data)
-    if (data) {
-        const { roomId, code, lastPlayerJoined: admin } = data
-        useRoomStore.getState().setAdmin(admin)
-        usePlayersStore.getState().addPlayer(admin)
-        // setCurrentPlayer(admin.id)
-        // console.log(useGameStore.getState().players)
-        useRoomStore.getState().setRoomData({ roomId: roomId, code })
-        router.navigate({ to: '/room/$roomId', params: { roomId }, search: { code } })
-    }
+    useRoomStore.getState().setAdmin(admin)
+    usePlayersStore.getState().addPlayer(admin)
+    useRoomStore.getState().setRoomData({ roomId: roomId, code })
+    router.navigate({ to: '/room/$roomId', params: { roomId }, search: { code } })
 }
 
-export const onReconnect = ({ json, meta }) => {
-    const { roomId, code, admin, players } = superjson.deserialize({ json, meta })
+export const onReconnect = ({ json, meta }: SuperJSONResult) => {
+    const { roomId, code, admin, players }: { roomId: string, code: string, admin: Player, players: PlayersMap } = superjson.deserialize({ json, meta })
     console.log('room:reconnect', json)
     useRoomStore.getState().setRoomData({ roomId, code }) // TODO: Set players
     useRoomStore.getState().setAdmin(admin)
