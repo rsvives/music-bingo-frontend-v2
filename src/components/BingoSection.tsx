@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import ConfettiExplosion from "react-confetti-explosion"
 import toast from "react-hot-toast"
 import superjson from 'superjson'
@@ -57,7 +57,7 @@ export const BingoSection = () => {
 
                 updateScore(playerMarked.id, score)
 
-                if (playerID !== usePlayersStore.getState().currentPlayer!) {
+                if (playerID !== useAuthStore.getState().authUser?.id) {
                     toast.success(`${playerMarked.username} marked!`)
                 }
             }
@@ -90,7 +90,7 @@ export const BingoSection = () => {
             console.log('started', playersWithNumbers)
             setGameStatus('started')
 
-            const myself = playersWithNumbers.get(usePlayersStore.getState().currentPlayer!)
+            const myself = playersWithNumbers.get(authUser!.id)
             console.log('myself', myself, usePlayersStore.getState().currentPlayer)
             if (myself) {
                 setMyBingoNumbers(myself.numbers)
@@ -120,7 +120,7 @@ export const BingoSection = () => {
             <div>
                 {confetti && <ConfettiExplosion particleCount={200} onComplete={() => setConfetti(false)} force={0.5} />}
             </div>
-            <section id='bingo-numbers'>
+            {myBingoNumbers[0].length > 0 && < section id='bingo-numbers'>
                 {
                     gameStatus === 'started' &&
                     <h2 className='h-12 font-bold text-center text-4xl mb-2'>
@@ -137,13 +137,13 @@ export const BingoSection = () => {
                     <TimerProgressBar gameStatus={gameStatus} totalTime={SECONDS_TO_NEXT_NUMBER} />
 
                 </div>
-            </section>
+            </ section>}
         </>
     )
 }
 
 const TimerProgressBar = ({ gameStatus, totalTime = 10 }: { gameStatus: string, totalTime: number }) => {
-    const [timeLeft, setTimeLeft] = useState(10);
+    const [timeLeft, setTimeLeft] = useState(totalTime);
     const [isRunning, setIsRunning] = useState(false);
     // const [isComplete, setIsComplete] = useState(false);
     const intervalRef = useRef(null);
@@ -205,7 +205,7 @@ const TimerProgressBar = ({ gameStatus, totalTime = 10 }: { gameStatus: string, 
         }
     }, [])
 
-    if (gameStatus !== 'started') {
+    if (gameStatus === 'waiting' || gameStatus === 'ended') {
         return <div className="h-2 mt-2"></div>
     }
 
