@@ -1,16 +1,14 @@
 import { Copy } from 'lucide-react'
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import QRCode from 'react-qr-code'
-import superjson from 'superjson'
 import toast from 'react-hot-toast'
-import type { Player, PlayerId } from '@/types'
 import { useGameStore } from '@/store/useGameStore'
-import { API_URL, FRONTEND_URL } from '@/lib/config'
+import { FRONTEND_URL } from '@/lib/config'
 import { BingoSection } from '@/components/BingoSection'
 import { useRoomStore } from '@/store/useRoomStore'
 import { GameControls } from '@/components/GameControls'
 import socket from '@/socket/socket'
-import { usePlayersStore } from '@/store/usePlayersStore'
+import { checkRoomAdmin } from '@/lib/utils'
 
 type RoomParams = {
     code?: string
@@ -18,33 +16,8 @@ type RoomParams = {
 
 export const Route = createFileRoute('/_auth/room_/$roomId')({
     component: SpecificRoom,
-    beforeLoad: () => { },
     loaderDeps: ({ search: { code } }: { search: RoomParams }) => ({ code }),
-    loader: async ({ params, deps }) => {
-        const { code } = deps
-        const res = await fetch(`${API_URL}/api/room/check`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ roomId: params.roomId, code })
-        })
-        if (res.status == 404) throw redirect({ to: '/' })
-
-        const { json, meta } = await res.json()
-        const data: { admin: Player, players: Map<PlayerId, Player>, roomId: string, code: string } = superjson.deserialize({ json, meta })
-
-        console.log('check', data)
-        // gameStore.setPlayers(data.players)
-        if (data.roomId && data.code) {
-            // useRoomStore.getState().setRoomData({ roomId, code })
-            // gameStore.setAdmin()
-            usePlayersStore.getState().setPlayers(data.players)
-            useRoomStore.getState().setAdmin(data.admin)
-            useRoomStore.getState().setRoomData({ roomId: data.roomId, code: data.code })
-
-        }
-    },
+    loader: ({ params, deps }) => checkRoomAdmin({ code: deps.code, roomId: params.roomId }),
     validateSearch: (search): RoomParams => {
         return {
             code: search.code as string || ''

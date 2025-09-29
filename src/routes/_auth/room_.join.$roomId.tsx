@@ -1,15 +1,12 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 
 import { LoaderCircle } from 'lucide-react'
-import superjson from 'superjson'
-import type { Player, PlayerId } from '@/types'
 import { useGameStore } from '@/store/useGameStore'
-import { API_URL } from '@/lib/config'
+
 
 import { BingoSection } from '@/components/BingoSection'
-import { usePlayersStore } from '@/store/usePlayersStore'
 import { useRoomStore } from '@/store/useRoomStore'
-import { useNumbersStore } from '@/store/useNumbersStore'
+import { checkRoomCode, clearGameData } from '@/lib/utils'
 
 
 
@@ -20,38 +17,9 @@ type RoomParams = {
 
 export const Route = createFileRoute('/_auth/room_/join/$roomId')({
     component: LobbyRoom,
-    beforeLoad: () => {
-        useNumbersStore.getState().resetNumbersStore()
-        useRoomStore.getState().resetRoomStore()
-        usePlayersStore.getState().resetScores()
-        usePlayersStore.getState().resetPlayers()
-    },
     loaderDeps: ({ search: { code } }: { search: RoomParams }) => ({ code }),
     loader: async ({ params, deps }) => {
-        const { code } = deps
-        console.log('hello', deps)
-        const res = await fetch(`${API_URL}/api/room/check`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ roomId: params.roomId, code })
-        })
-        if (res.status == 404) throw redirect({ to: '/', search: { error: 'room not found' } })
-        if (res.status == 301) throw redirect({ to: '/', search: { error: 'forbidden' } })
-
-        const { json, meta } = await res.json()
-        const data: { admin: Player, players: Map<PlayerId, Player>, roomId: string, code: string } = superjson.deserialize({ json, meta })
-        console.log('check', data)
-
-        // TODO: check game status 
-        usePlayersStore.getState().setPlayers(data.players)
-        useRoomStore.getState().setAdmin(data.admin)
-        useRoomStore.getState().setRoomData({ roomId: data.roomId, code: data.code })
-        // useNumbersStore.getState().setCalledNumbers()
-        // useNumbersStore.getState().setMyBingoNumbers()
-
-        return data
+        await checkRoomCode({ code: deps.code, roomId: params.roomId })
     },
     validateSearch: (search): RoomParams => {
         return {
