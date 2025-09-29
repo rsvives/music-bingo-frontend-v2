@@ -6,7 +6,7 @@ import { useGameStore } from '@/store/useGameStore'
 
 import { BingoSection } from '@/components/BingoSection'
 import { useRoomStore } from '@/store/useRoomStore'
-import { checkRoomCode, clearGameData } from '@/lib/utils'
+import { checkRoomCode } from '@/lib/utils'
 
 
 
