@@ -2,7 +2,7 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import type { PlayersMap, User } from '@/types'
-import { createSuperjsonStorage } from "@/lib/utils"
+import { createSuperjsonStorage } from "@/lib/config"
 
 type State = {
     roomId: string | null,

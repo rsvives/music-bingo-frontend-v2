@@ -1,21 +1,23 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+// import { useAuthStore } from './useAuthStore';
+// import { useRoomStore } from './useRoomStore';
 import type { Player, PlayerId, PlayersMap } from '@/types';
-import { createSuperjsonStorage } from '@/lib/utils';
+import { createSuperjsonStorage } from '@/lib/config';
 
 
 
 interface PlayersState {
     players: Map<PlayerId, Player>
     currentPlayer: string | null
-    isAdmin: boolean | null
+    // isAdmin: () => boolean
     addPlayer: (player: Player) => void
     setPlayers: (players: PlayersMap) => void
     removePlayer: (playerId: PlayerId) => void
     updatePlayer: (playerId: PlayerId, updates: Partial<Player>) => void
     updateScore: (playerId: PlayerId, score: number) => void
     setCurrentPlayer: (playerId: string) => void
-    setAdmin: (bool: boolean) => void
+    // setAdmin: (bool: boolean) => void
     setConnectionStatus: (playerId: PlayerId, bool: boolean) => void
     resetScores: () => void
     resetPlayers: () => void
@@ -27,13 +29,13 @@ export const usePlayersStore = create<PlayersState>()(
         (set, get, store) => ({
             players: new Map(),
             currentPlayer: null,
-            isAdmin: null,
+
 
             addPlayer: (playerData) => set((state) => {
                 const updatedPlayers = state.players
                 updatedPlayers.set(playerData.id, playerData)
 
-                if (playerData.isAdmin) get().setAdmin(true)
+                // if (playerData.isAdmin) get().setAdmin(true)
 
                 return { players: updatedPlayers }
             }),
@@ -71,7 +73,7 @@ export const usePlayersStore = create<PlayersState>()(
             }),
 
             setCurrentPlayer: (player) => set({ currentPlayer: player }),
-            setAdmin: (boolean) => { set({ isAdmin: boolean }) },
+            // setAdmin: (boolean) => { set({ isAdmin: boolean }) },
             setConnectionStatus: (playerId, connectionStatus) => {
                 const updatedPlayers = get().players
                 const player = updatedPlayers.get(playerId)

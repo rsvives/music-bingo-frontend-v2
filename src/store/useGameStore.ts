@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Player, User } from '@/types'
-import { createSuperjsonStorage } from '@/lib/utils'
+import { createSuperjsonStorage } from '@/lib/config'
 import socket from '@/socket/socket'
 
 type State = {

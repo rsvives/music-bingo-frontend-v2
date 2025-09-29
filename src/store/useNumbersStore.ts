@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { createSuperjsonStorage } from '@/lib/utils';
+import { createSuperjsonStorage } from '@/lib/config';
 
 type State = {
     lastCalledNumber: number | null,
