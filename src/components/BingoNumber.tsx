@@ -22,9 +22,9 @@ export const BingoNumber = ({ number, row, col }: props) => {
 
         // if (number === lastCalledNumber) {
         // if (true) {
-        if (calledNumbers.has(number)) {
+        if (calledNumbers.has(number) && !myMarkedNumbers.has(number)) {
 
-            addMarkedNumber(number)
+            useNumbersStore.getState().addMarkedNumber(number)
             if (checkLine()) {
                 if (!lineWinner) {
                     setConfetti(true)
@@ -43,7 +43,7 @@ export const BingoNumber = ({ number, row, col }: props) => {
 
     return (
         <td className="p-1" itemID={`col-${row}- ${col} `}>
-            <button onClick={handleOnClick} className={cn(classes, gameStatus === 'started' ? 'hover:bg-slate-100' : 'hover:bg-none')} disabled={gameStatus === 'paused'}>
+            <button onClick={handleOnClick} className={cn(classes, gameStatus === 'started' ? 'hover:bg-slate-100 active:bg-slate-200' : 'hover:bg-none active:bg-none')} disabled={gameStatus === 'paused'}>
                 {number}
             </button>
         </td >
