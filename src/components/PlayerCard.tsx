@@ -6,10 +6,11 @@ import { cn } from "@/lib/utils"
 type Props = {
     player: Player,
     showProgress?: boolean,
-    showIsAdmin?: boolean
+    showIsAdmin?: boolean,
+    showConnected?: boolean
 }
 
-export const PlayerCard = ({ player, showProgress = true, showIsAdmin = true }: Props) => {
+export const PlayerCard = ({ player, showProgress = true, showIsAdmin = true, showConnected = true }: Props) => {
     const progress = player.score ? `${player.score / 15 * 100}` : 0
 
     console.log('progress', progress)
@@ -20,7 +21,7 @@ export const PlayerCard = ({ player, showProgress = true, showIsAdmin = true }: 
                     <img src={player.pic} alt={`${player.firstName} profile pic`} className="w-[24px] min-w-[24px] rounded-full aspect-square basis-6" />
                     <p className="text-ellipsis whitespace-nowrap overflow-hidden">{player.firstName}</p>
                 </div>
-                {!player.connected && <LoaderCircle className='animate-spin' />}
+                {showConnected && !player.connected && <LoaderCircle className='animate-spin' />}
                 {showIsAdmin && player.isAdmin && <span className="p-1 rounded-full border-1 border-slate-100 text-slate-700 basis-2" title="admin"><AdminCrownIcon size={14} color="var(--color-amber-400)" /></span>}
             </div>
             {

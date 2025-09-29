@@ -36,10 +36,8 @@ function RouteComponent() {
                 </div>
                 <div className='flex flex-col gap-2 w-full border-1 rounded-md shadow-md  border-slate-500 p-4'>
                     <h2 className='flex gap-2 text-xl items-center font-semibold text-slate-700' > <Trophy size={20} strokeWidth={1.8} /> Bingo winner:</h2>
-                    <PlayerCard showIsAdmin={false} showProgress={false} player={bingoWinner} />
+                    <PlayerCard showIsAdmin={false} showProgress={false} player={bingoWinner} showConnected={false} />
                 </div>
-
-
             </section>
         </main>
     )
