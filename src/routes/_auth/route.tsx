@@ -6,8 +6,8 @@ import { usePlayersStore } from '@/store/usePlayersStore'
 import { useNumbersStore } from '@/store/useNumbersStore'
 
 export const Route = createFileRoute('/_auth')({
-    beforeLoad: ({ context, location }) => {
-        if (!context.auth.isAuthenticated) {
+    beforeLoad: ({ context, location }: { context: { auth?: { isAuthenticated: boolean } }, location: any }) => {
+        if (!context.auth?.isAuthenticated) {
             throw redirect({
                 to: '/sign-in',
                 search: {
