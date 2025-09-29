@@ -3,6 +3,7 @@ import ConfettiExplosion from "react-confetti-explosion"
 import toast from "react-hot-toast"
 import superjson from 'superjson'
 import { BingoCard } from "./BingoCard"
+import type { SuperJSONResult } from 'superjson';
 import type { Player, PlayerId } from "@/types"
 import { useAuthStore } from "@/store/useAuthStore"
 import { useGameStore } from "@/store/useGameStore"
@@ -24,15 +25,6 @@ export const BingoSection = () => {
     } = useNumbersStore()
 
     const SECONDS_TO_NEXT_NUMBER = 5
-
-    useEffect(() => {
-        if (authUser?.id === admin?.id && gameStatus === 'started') {
-            const interval = setInterval(handleNextNumber, SECONDS_TO_NEXT_NUMBER * 1000)
-            return () => {
-                clearInterval(interval)
-            }
-        }
-    }, [gameStatus])
 
     const handleNextNumber = () => {
         console.log('next number')
@@ -85,7 +77,7 @@ export const BingoSection = () => {
             // increaseMarked(playerID)
 
         }
-        const handleGameStarted = ({ json, meta }) => {
+        const handleGameStarted = ({ json, meta }: SuperJSONResult) => {
             const { players: playersWithNumbers }: { players: Map<PlayerId, Player> } = superjson.deserialize({ json, meta })
             console.log('started', playersWithNumbers)
             setGameStatus('started')
@@ -134,7 +126,7 @@ export const BingoSection = () => {
                 }
                 <div>
                     <BingoCard bingoNumbers={myBingoNumbers} className={gameStatus === 'paused' && 'bg-slate-300 text-slate-400 animate-pulse'} />
-                    <TimerProgressBar gameStatus={gameStatus} totalTime={SECONDS_TO_NEXT_NUMBER} />
+                    <TimerProgressBar gameStatus={gameStatus} totalTime={SECONDS_TO_NEXT_NUMBER} onTimerComplete={handleNextNumber} isAdmin={authUser?.id === admin?.id} />
 
                 </div>
             </ section>}
@@ -142,28 +134,37 @@ export const BingoSection = () => {
     )
 }
 
-const TimerProgressBar = ({ gameStatus, totalTime = 10 }: { gameStatus: string, totalTime: number }) => {
+const TimerProgressBar = ({ gameStatus, totalTime = 10, onTimerComplete, isAdmin }: { gameStatus: string, totalTime: number, onTimerComplete?: () => void, isAdmin?: boolean }) => {
     const [timeLeft, setTimeLeft] = useState(totalTime);
     const [isRunning, setIsRunning] = useState(false);
-    // const [isComplete, setIsComplete] = useState(false);
-    const intervalRef = useRef(null);
-
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    // const [pausedIntervalId, setPausedIntervalId] = useState<NodeJS.Timeout | null>(null);
 
     const progress = useMemo(() => {
-        return (100 - (- (totalTime - timeLeft) / totalTime) * 100);
+        return (timeLeft / totalTime) * 100;
     }, [timeLeft, totalTime]);
 
     useEffect(() => {
-        intervalRef.current = setInterval(() => {
-            setTimeLeft(prev => {
-                const newTime = prev + 0.1;
-                if (newTime <= 0) {
-                    setIsRunning(false);
-                    return 0;
-                }
-                return newTime;
-            });
-        }, 100);
+        if (isRunning && gameStatus === 'started') {
+            intervalRef.current = setInterval(() => {
+                setTimeLeft(prev => {
+                    const newTime = prev - 0.1;
+                    if (newTime <= 0) {
+                        setIsRunning(false);
+                        if (isAdmin && onTimerComplete) {
+                            onTimerComplete();
+                        }
+                        return 0;
+                    }
+                    return newTime;
+                });
+            }, 100);
+        } else {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+        }
 
         return () => {
             if (intervalRef.current) {
@@ -171,26 +172,33 @@ const TimerProgressBar = ({ gameStatus, totalTime = 10 }: { gameStatus: string, 
                 intervalRef.current = null;
             }
         };
-    }, [isRunning, timeLeft]);
+    }, [isRunning, gameStatus]);
 
     const startTimer = useCallback(() => {
         setIsRunning(true);
     }, []);
+
     const resetTimer = useCallback(() => {
         setTimeLeft(totalTime);
         setIsRunning(false);
         startTimer()
-    }, []);
+    }, [totalTime, startTimer]);
 
     const pauseTimer = useCallback(() => {
+        if (intervalRef.current) {
+            // setPausedIntervalId(intervalRef.current);
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
         setIsRunning(false);
     }, []);
 
-    useEffect(() => {
 
+    useEffect(() => {
+        startTimer()
         socket.on('game:number-generated', resetTimer)
         socket.on('game:started', resetTimer)
-        socket.on('game:resumed', resetTimer)
+        socket.on('game:resumed', startTimer)
         socket.on('game:paused', pauseTimer)
         socket.on('game:restarted', resetTimer)
         socket.on('game:ended', resetTimer)
@@ -211,10 +219,11 @@ const TimerProgressBar = ({ gameStatus, totalTime = 10 }: { gameStatus: string, 
 
     return (
         <div className="w-full relative z-0 bg-slate-300 h-2 mt-2 rounded-full">
-            {/* {progress + ' ' + intervalRef.current} */}
+            {/* {progress + ' ' + (intervalRef.current)} */}
             <div style={{ width: `${progress}%` }} className={cn(' relative z-0 bg-slate-800 h-2 rounded-full',
-                'transition-all ease-in-out'
+                'transition-all ease-in-out',
+                { 'animate-pulse': gameStatus === 'paused' }
             )}></div>
-        </div>
+        </div >
     )
 }
