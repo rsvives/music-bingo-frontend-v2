@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client'
 import { API_URL } from '@/lib/config';
 
-const socket = io(API_URL, { autoConnect: false })
+const socket = io(API_URL, { autoConnect: true })
 
 socket.onAny((event, ...args) => {
     console.log(event, args);
