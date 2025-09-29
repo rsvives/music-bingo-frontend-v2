@@ -3,12 +3,14 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import QRCode from 'react-qr-code'
 import superjson from 'superjson'
 import toast from 'react-hot-toast'
+import type { Player, PlayerId } from '@/types'
 import { useGameStore } from '@/store/useGameStore'
 import { API_URL, FRONTEND_URL } from '@/lib/config'
 import { BingoSection } from '@/components/BingoSection'
 import { useRoomStore } from '@/store/useRoomStore'
 import { GameControls } from '@/components/GameControls'
 import socket from '@/socket/socket'
+import { usePlayersStore } from '@/store/usePlayersStore'
 
 type RoomParams = {
     code?: string
@@ -30,14 +32,17 @@ export const Route = createFileRoute('/_auth/room_/$roomId')({
         if (res.status == 404) throw redirect({ to: '/' })
 
         const { json, meta } = await res.json()
-        const { roomId }: { roomId: string } = superjson.deserialize({ json, meta })
+        const data: { admin: Player, players: Map<PlayerId, Player>, roomId: string, code: string } = superjson.deserialize({ json, meta })
 
-        console.log('check')
+        console.log('check', data)
         // gameStore.setPlayers(data.players)
-        if (roomId && code) {
-            useRoomStore.getState().setRoomData({ roomId, code })
+        if (data.roomId && data.code) {
+            // useRoomStore.getState().setRoomData({ roomId, code })
             // gameStore.setAdmin()
-            return { roomId, code }
+            usePlayersStore.getState().setPlayers(data.players)
+            useRoomStore.getState().setAdmin(data.admin)
+            useRoomStore.getState().setRoomData({ roomId: data.roomId, code: data.code })
+
         }
     },
     validateSearch: (search): RoomParams => {
