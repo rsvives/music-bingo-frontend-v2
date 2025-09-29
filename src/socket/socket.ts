@@ -7,4 +7,11 @@ socket.onAny((event, ...args) => {
     console.log(event, args);
 });
 
+// Custom Property userID on socket
+declare module 'socket.io-client' {
+    interface Socket {
+        userID?: string;
+    }
+}
+
 export default socket;
