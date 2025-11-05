@@ -9,11 +9,9 @@ import { clearGameData } from '@/lib/utils'
 
 export const Route = createFileRoute('/_auth/room')({
   component: Room,
-  beforeLoad: () => {
-    console.log('loading room')
-    // useGameStore.getState().setGameStatus('waiting')
-    clearGameData()
-  }
+  // beforeLoad: () => {
+
+  // }
 
 })
 

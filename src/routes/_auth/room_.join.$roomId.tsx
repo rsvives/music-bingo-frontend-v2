@@ -6,7 +6,7 @@ import { useGameStore } from '@/store/useGameStore'
 
 import { BingoSection } from '@/components/BingoSection'
 import { useRoomStore } from '@/store/useRoomStore'
-import { checkRoomCode } from '@/lib/utils'
+import { checkRoomCode, clearGameData } from '@/lib/utils'
 
 
 
@@ -17,6 +17,7 @@ type RoomParams = {
 
 export const Route = createFileRoute('/_auth/room_/join/$roomId')({
     component: LobbyRoom,
+    // beforeLoad: clearGameData,
     loaderDeps: ({ search: { code } }: { search: RoomParams }) => ({ code }),
     loader: async ({ params, deps }) => {
         await checkRoomCode({ code: deps.code, roomId: params.roomId })

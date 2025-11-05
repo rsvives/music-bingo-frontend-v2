@@ -19,3 +19,5 @@ export interface Player extends User {
 
 // export type PlayersMap = Record<PlayerId, PlayerData>
 export type PlayersMap = Map<PlayerId, PlayerData>
+
+export type GameStatus = 'waiting' | 'started' | 'ended' | 'paused'

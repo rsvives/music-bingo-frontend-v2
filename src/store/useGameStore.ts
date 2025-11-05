@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Player, User } from '@/types'
+import type { GameStatus, Player, User } from '@/types'
 import { createSuperjsonStorage } from '@/lib/config'
 import socket from '@/socket/socket'
 
@@ -8,7 +8,7 @@ type State = {
 
     lineWinner: Player | null,
     bingoWinner: Player | null,
-    gameStatus: 'waiting' | 'started' | 'ended' | 'paused'
+    gameStatus: GameStatus | null
     confetti: boolean
 }
 type Actions = {
@@ -32,7 +32,7 @@ export const useGameStore = create<State & Actions>()(
             lineWinner: null,
             bingoWinner: null,
             players: new Map(),
-            gameStatus: 'waiting',
+            gameStatus: null,
             confetti: false,
 
             startGame: (admin) => {

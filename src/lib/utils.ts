@@ -5,7 +5,7 @@ import superjson from 'superjson'
 import { redirect } from '@tanstack/react-router'
 
 import type { ClassValue } from "clsx"
-import type { Player, PlayerId } from "@/types"
+import type { GameStatus, Player, PlayerId } from "@/types"
 import { API_URL } from '@/lib/config'
 import { useRoomStore } from "@/store/useRoomStore"
 import { usePlayersStore } from "@/store/usePlayersStore"
@@ -45,15 +45,18 @@ export const checkRoomCode = async ({ code, roomId }: { code: string | undefined
     if (res.status == 401) throw redirect({ to: '/', search: { error: 'Unauthorized: wrong code' } })
 
     const { json, meta } = await res.json()
-    const data: { admin: Player, players: Map<PlayerId, Player>, roomId: string, code: string } = superjson.deserialize({ json, meta })
+    const data: { admin: Player, players: Map<PlayerId, Player>, roomId: string, code: string, gameStatus: GameStatus } = superjson.deserialize({ json, meta })
+    clearGameData()
+
     console.log('check', data)
 
-    clearGameData()
     // TODO: check game status 
     if (data.roomId && data.code) {
-        useGameStore.getState().setGameStatus('waiting')
+
         usePlayersStore.getState().setPlayers(data.players)
         useRoomStore.getState().setAdmin(data.admin)
+        useNumbersStore.getState().setMyBingoNumbers([[], [], []])
+        useGameStore.getState().setGameStatus(data.gameStatus)
         useRoomStore.getState().setRoomData({ roomId: data.roomId, code: data.code })
         // useNumbersStore.getState().setCalledNumbers()
         // useNumbersStore.getState().setMyBingoNumbers()
@@ -84,7 +87,7 @@ export const checkRoomAdmin = async ({ code, roomId }: { code: string | undefine
     if (data.roomId && data.code) {
         usePlayersStore.getState().setPlayers(data.players)
         useRoomStore.getState().setAdmin(data.admin)
-        // useNumbersStore.getState().setMyBingoNumbers(data.players.get(useAuthStore.getState().authUser!.id)!.numbers)
+        useNumbersStore.getState().setMyBingoNumbers([[], [], []])
         useRoomStore.getState().setRoomData({ roomId: data.roomId, code: data.code })
         // useNumbersStore.getState().setCalledNumbers()
         // useNumbersStore.getState().setMyBingoNumbers()
@@ -93,6 +96,8 @@ export const checkRoomAdmin = async ({ code, roomId }: { code: string | undefine
 }
 
 export const clearGameData = () => {
+    console.log('clearing game data', useNumbersStore.getState());
+
     useNumbersStore.getState().resetNumbersStore()
     useRoomStore.getState().resetRoomStore()
     usePlayersStore.getState().resetScores()

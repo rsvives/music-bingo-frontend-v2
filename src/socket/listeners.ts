@@ -4,46 +4,47 @@
 import superjson from 'superjson'
 import socket from './socket'
 import type { SuperJSONResult, SuperJSONValue } from "node_modules/superjson/dist/types"
-import type { Player, PlayersMap, User } from "@/types"
+import type { GameStatus, Player, PlayersMap, User } from "@/types"
 import { useGameStore } from "@/store/useGameStore"
 import { useNumbersStore } from "@/store/useNumbersStore"
 import { usePlayersStore } from "@/store/usePlayersStore"
 import { router } from "@/main"
 import { useAuthStore } from '@/store/useAuthStore'
 import { useRoomStore } from '@/store/useRoomStore'
+import { isAdmin } from '@/lib/utils'
 
 type SocketSessionData = {
     sessionID: string,
     user: User,
     bingoNumbers: [Array<number>, Array<number>, Array<number>] | null,
     markedNumbers: Set<number> | null,
-    calledNumbers: Set<number> | null
+    calledNumbers: Set<number> | null,
+    gameStatus: GameStatus | null
 }
 export const handleSocketSession = ({ meta, json }: SuperJSONResult) => {
     const data: SocketSessionData = superjson.deserialize({ meta, json })
-    const { sessionID, user, bingoNumbers, markedNumbers, calledNumbers } = data
+    const { sessionID, user, bingoNumbers, markedNumbers, calledNumbers, gameStatus } = data
     console.log('session to localstorage', sessionID, bingoNumbers)
     socket.auth = { sessionID };
     localStorage.setItem("sessionID", sessionID);
 
     socket.userID = user.id;
 
-    if (bingoNumbers) {
-        useNumbersStore.getState().setMyBingoNumbers(bingoNumbers)
-    }
-    if (markedNumbers) {
-        useNumbersStore.getState().setMarkedNumbers(markedNumbers)
-    }
-    if (calledNumbers) {
-        useNumbersStore.getState().setCalledNumbers(calledNumbers)
-    }
+    if (gameStatus) useGameStore.getState().setGameStatus(gameStatus)
+    console.log('handle session', useGameStore.getState().gameStatus)
+    if (bingoNumbers) useNumbersStore.getState().setMyBingoNumbers(bingoNumbers)
+    if (markedNumbers) useNumbersStore.getState().setMarkedNumbers(markedNumbers)
+    if (calledNumbers) useNumbersStore.getState().setCalledNumbers(calledNumbers)
+
 }
 
 export const handleGamePaused = () => {
     useGameStore.getState().setGameStatus('paused')
+    console.log('handle pause', useGameStore.getState().gameStatus)
 }
 export const handleGameResumed = () => {
     useGameStore.getState().setGameStatus('started')
+    console.log('handle resume', useGameStore.getState().gameStatus)
 }
 
 export const handleGameRestarted = () => {
@@ -57,8 +58,11 @@ export const handleGameRestarted = () => {
 
 export const handleGameEnded = () => {
     console.log('redirecting game over')
-
+    if (!isAdmin()) {
+        socket.emit('game:terminate')
+    }
     useGameStore.getState().setGameStatus('ended')
+    console.log('handle ended', useGameStore.getState().gameStatus)
     router.navigate({ to: '/game_over' })
 }
 
