@@ -26,7 +26,7 @@ const storage = createSuperjsonStorage<State & Actions>()
 
 export const useNumbersStore = create<State & Actions>()(
     persist(
-        (set, get, store) => ({
+        (set, get) => ({
             lastCalledNumber: null,
             calledNumbers: new Set(),
             myMarkedNumbers: new Set(),

@@ -7,6 +7,7 @@ export const Route = createFileRoute('/sign-in')({
 })
 
 function SignInPage() {
+    // @ts-ignore: next line redirect property
     const { redirect } = Route.useSearch()
     return (
         <div className="flex items-center justify-center min-h-screen">

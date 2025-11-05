@@ -14,7 +14,7 @@ type props = {
 export const BingoNumber = ({ number, row, col }: props) => {
     const { authUser } = useAuthStore()
     const { setConfetti, lineWinner, gameStatus } = useGameStore()
-    const { myMarkedNumbers, calledNumbers, addMarkedNumber, checkLine, checkBingo } = useNumbersStore()
+    const { myMarkedNumbers, calledNumbers, checkLine, checkBingo } = useNumbersStore()
     const markedNumberClass = myMarkedNumbers.has(number) ? 'bg-slate-300' : ''
     const classes = `w-[56px] p-4 text-center rounded-md border-1 border-slate-200  ${markedNumberClass}`
 
