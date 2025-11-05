@@ -7,6 +7,7 @@ import { useGameStore } from '@/store/useGameStore'
 import { usePlayersStore } from '@/store/usePlayersStore'
 import { useNumbersStore } from '@/store/useNumbersStore'
 import { useRoomStore } from '@/store/useRoomStore'
+import { API_URL } from '@/lib/config'
 
 export const Route = createFileRoute('/')({
     component: RouteComponent,
@@ -18,14 +19,21 @@ function RouteComponent() {
     const { resetPlayers } = usePlayersStore()
     const { resetNumbersStore } = useNumbersStore()
     const { resetRoomStore } = useRoomStore()
+
+    const pingServer = () => {
+        fetch(API_URL + '/health')
+            .then(res => res.json().then(data => console.log(data)))
+            .catch(error => console.error(error))
+    }
     useEffect(() => {
         resetGameStore()
         resetPlayers()
         resetNumbersStore()
         resetRoomStore()
         setConfetti(true)
-
+        pingServer()
     }, [])
+
     const { confetti, setConfetti } = useGameStore()
     return (<>
         <main className='flex flex-1 min-h-[85vh] flex-col gap-4 items-center justify-center pb-8'>

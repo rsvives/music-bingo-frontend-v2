@@ -2,8 +2,8 @@ import superjson from 'superjson'
 import type { PersistStorage } from "zustand/middleware"
 
 export const LOCAL_MACHINE = import.meta.env.VITE_LOCAL_MACHINE
-export const FRONTEND_URL = process.env.NODE_ENV === 'production' ? undefined : `http://${LOCAL_MACHINE}:3000`;
-export const API_URL = process.env.NODE_ENV === 'production' ? undefined : `http://${LOCAL_MACHINE}:5001`;
+export const FRONTEND_URL = process.env.NODE_ENV === 'production' ? import.meta.env.VITE_FRONTEND_URL : `http://${LOCAL_MACHINE}:3000`;
+export const API_URL = process.env.NODE_ENV === 'production' ? import.meta.env.VITE_API_URL : `http://${LOCAL_MACHINE}:5001`;
 
 export const createSuperjsonStorage = <T>(): PersistStorage<T> => ({
     getItem: (name) => {
